@@ -1,0 +1,1096 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<title>입양하개</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="유기동물 입양공고를 AI가 자세하게 정리해 주는 서비스">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22 fill=%22%237A6A62%22/%3E%3Cpath fill=%22%23FBF8F1%22 d=%22M12.3 11.2c-3 0-6.3 4.4-6.3 7.1 0 1.9 1.5 2.7 3 2.7 1.3 0 2.2-.8 3.3-.8s2 .8 3.3.8c1.5 0 3-.8 3-2.7 0-2.7-3.3-7.1-6.3-7.1z%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one phone-width app column; sticky header with role switch; views swap inside main. */
+:root{
+  /* palette: blue-gray #A0ABB7, cream #EAE3CE, sand #D1C1B0, taupe #907F77 (+ deeper taupe for text and buttons) */
+  --bg:#EAE3CE; --surface:#FBF8F1; --surface-2:#F3EDDF; --field:#FFFDF8; --ink:#3B302B; --muted:#6B5D56; --line:#D1C1B0;
+  --on-bg:#3B302B;
+  --accent:#7A6A62; --accent-ink:#FBF8F1; --accent-soft:#E3D7CA;
+  --amber:#875A12; --amber-soft:#F4E6CA; --red:#9C4336; --red-soft:#F1DCD5; --blue:#4D5967; --blue-soft:#DFE5EB;
+  --gray:#A0ABB7; --taupe:#907F77;
+  color-scheme:light;
+  --font-display:"Gowun Dodum","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --r:14px;
+}
+/* Single warm cream-and-taupe look in every theme. */
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--on-bg);font-family:var(--font-body);font-size:15px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--accent)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--accent);color:var(--accent-ink)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px}
+header.top[hidden]{display:none}
+.brand{display:flex;align-items:baseline;gap:8px;min-width:0}
+.brand b{font-family:var(--font-display);font-size:21px;font-weight:400;letter-spacing:-.01em}
+.brand small{color:#EFE6DA;font-size:13px;font-weight:600}
+.home-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #A69890;background:#655750;color:var(--accent-ink);font:600 14px var(--font-body);padding:7px 12px;border-radius:999px;cursor:pointer;flex-shrink:0}
+.home-btn svg{width:18px;height:18px}
+.home-btn:hover{background:#584B45}
+.home-btn:focus-visible{outline-color:var(--accent-ink)}
+/* home */
+.home{min-height:100svh;display:flex;flex-direction:column;justify-content:center;gap:36px;padding-block:48px}
+.home .logo{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.home .mark{width:96px;height:96px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+.home .mark svg{width:50px;height:50px}
+.home h1{font-family:var(--font-display);font-weight:400;font-size:42px;margin:0;letter-spacing:-.01em;line-height:1.1}
+.home .tag{margin:0;color:var(--muted);font-size:15px}
+.home .choices{display:flex;flex-direction:column;gap:12px}
+.choice{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;cursor:pointer;color:var(--ink);font:inherit;width:100%}
+.choice:hover{border-color:var(--accent)}
+.choice .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center}
+.choice .ic svg{width:28px;height:28px}
+.choice b{display:block;font-size:18px;font-weight:700}
+.choice span.d{display:block;font-size:13.5px;color:var(--muted);margin-top:2px}
+.choice .arr{color:var(--taupe);font-size:20px}
+.home .foot{text-align:center;font-size:12px;color:var(--muted);margin:0}
+main{padding-block:16px 48px}
+.note{font-size:12.5px;color:var(--muted);background:var(--surface-2);border-radius:10px;padding:8px 12px}
+h2{font-family:var(--font-display);font-weight:400;font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:15px;margin:0;font-weight:700}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+button,select,input,textarea{font-family:var(--font-body)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:14px;padding:10px 14px;border-radius:10px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.block{width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--gray);background:var(--surface);color:var(--muted);font-size:13px;font-weight:600;padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.b-fresh{background:var(--accent-soft);color:var(--accent)}
+.b-warn{background:var(--amber-soft);color:var(--amber)}
+.b-stale{background:var(--red-soft);color:var(--red)}
+.b-info{background:var(--blue-soft);color:var(--blue)}
+.b-plain{background:var(--surface-2);color:var(--muted)}
+/* listing cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:grid;grid-template-columns:76px 1fr;gap:12px;cursor:pointer;text-align:left;width:100%;color:inherit;font:inherit}
+.card:hover{border-color:var(--accent)}
+.thumb{width:76px;height:76px;border-radius:12px;display:grid;place-items:center;color:var(--ink)}
+.thumb svg{width:34px;height:34px;opacity:.75}
+.thumb img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+.hero-photo{width:100%;aspect-ratio:4/3;max-width:100%;object-fit:cover;border-radius:var(--r);display:block;background:var(--surface-2)}
+.photo-cap{font-size:12px;color:var(--on-bg)}
+.t-dog{background:#D1C1B0}.t-cat{background:#DFE5EB}.t-rabbit{background:#EADBD0}.t-etc{background:#E4DCC8}
+.card .meta{min-width:0;display:flex;flex-direction:column;gap:4px}
+.card .name{font-weight:700;font-size:15.5px}
+.card .line{color:var(--muted);font-size:13px}
+.card .head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+/* panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel.soft{background:var(--surface-2);border-color:transparent}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.kv div{display:flex;flex-direction:column;min-width:0}
+.kv span{font-size:12px;color:var(--muted)}
+.kv b{font-weight:600;font-size:14.5px;overflow-wrap:anywhere}
+.size-sense{display:flex;gap:10px;align-items:center;background:var(--blue-soft);color:var(--blue);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.size-sense b{color:var(--ink)}
+.list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.care{display:flex;flex-direction:column;gap:10px}
+.care-item{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+.care-item:first-child{border-top:0;padding-top:0}
+.care-item .row{justify-content:space-between}
+.missing li{color:var(--amber)}
+.missing li span{color:var(--ink)}
+.qlist{counter-reset:q;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.qlist li{counter-increment:q;display:grid;grid-template-columns:24px 1fr;gap:6px}
+.qlist li::before{content:counter(q);font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+details.disease{border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+details.disease summary{cursor:pointer;padding:12px 14px;display:flex;justify-content:space-between;gap:8px;font-weight:700;list-style:none}
+details.disease summary::-webkit-details-marker{display:none}
+details.disease summary::after{content:"＋";color:var(--muted)}
+details.disease[open] summary::after{content:"－"}
+.dis-body{padding:0 14px 14px;display:grid;gap:8px}
+.dis-body .f span{display:block;font-size:12px;color:var(--muted)}
+.raw{font-size:13.5px;background:var(--surface-2);border-radius:10px;padding:10px 12px;white-space:pre-wrap}
+.back{border:0;background:none;color:var(--on-bg);font-weight:700;font-size:14px;cursor:pointer;padding:0;align-self:flex-start}
+.tel{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tel code{font-family:var(--font-body);font-weight:700;font-size:16px;user-select:all}
+/* forms */
+form{display:flex;flex-direction:column;gap:14px}
+fieldset{border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:0;display:flex;flex-direction:column;gap:12px;background:var(--surface);min-width:0}
+legend{font-weight:700;padding:0 6px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600;min-width:0}
+label.f input,label.f select,label.f textarea{font-size:15px;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
+label.f textarea{min-height:76px;resize:vertical}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.req{color:var(--red)}
+.beh{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 8px;align-items:center}
+.beh .lab{font-size:14px}
+.opt{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.opt label{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:3px 9px;cursor:pointer;color:var(--muted)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt input:checked + span{color:var(--ink);font-weight:700}
+.opt label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.opt label:has(input:focus-visible){outline:2px solid var(--accent)}
+.traits label{font-size:13px}
+.err{color:var(--red);font-size:13px}
+.thinking{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:14px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1s infinite alternate}
+@keyframes pulse{from{opacity:.25}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){.dot{animation:none}}
+.verdict{font-family:var(--font-display);font-size:19px}
+.v-good{color:var(--accent)}.v-adjust{color:var(--amber)}.v-re{color:var(--red)}
+.res h3{font-size:14px}
+.res .grp{display:flex;flex-direction:column;gap:4px}
+.tabs{display:flex;gap:6px}
+.mgmt{display:flex;flex-direction:column;gap:10px}
+.mrow{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px}
+.mrow .row{justify-content:space-between}
+.empty{color:var(--on-bg);text-align:center;padding:24px 8px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;z-index:20}
+@media (max-width:380px){.kv,.grid2{grid-template-columns:1fr}.beh{grid-template-columns:1fr}.opt{justify-content:flex-start}}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><b>입양하개</b><small id="role-label">입양 희망자</small></div>
+    <button class="home-btn" id="go-home" aria-label="홈으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg><span>홈</span></button>
+  </div>
+</header>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const todayISO = () => new Date().toISOString().slice(0,10);
+const daysAgoISO = n => { const d = new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); };
+const daysSince = iso => Math.max(0, Math.round((new Date(todayISO()) - new Date(iso)) / 86400000));
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2200); }
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------- reference data ---------- */
+const BEH = [
+  ["stranger","낯선 사람"],["dogs","다른 개"],["cats","고양이"],["kids","아이"],
+  ["walk","산책(목줄)"],["alone","혼자 있기"],["toilet","배변 가리기"],["bark","짖음·울음이 적음"]
+];
+const BEH_VAL = {good:"좋음", mid:"보통", hard:"어려움", unknown:"모름"};
+const VACCINES = {"개":["종합백신(DHPPL)","코로나 장염","켄넬코프","광견병","인플루엔자"], "고양이":["종합백신(FVRCP)","광견병","백혈병(FeLV)"]};
+const VAC_VAL = {done:"완료", ing:"접종 중", none:"안 함·모름"};
+const vaccHasDetail = v => v === "완료" || v === "접종 중";
+function vaccSummary(a){
+  const d = a.vaccDetail; if (!d) return "";
+  const items = (d.list||[]).filter(x => x.status !== "none").map(x => `${x.name} ${VAC_VAL[x.status]}`);
+  return [items.join(" · "), d.memo].filter(Boolean).join(" / ");
+}
+const TRAITS = ["활발함","차분함","소심함","사람을 좋아함","겁이 많음","호기심 많음","독립적","애교 많음"];
+
+const DISEASES = {
+  "파보바이러스 장염": {species:"개", one:"어린 강아지에게 특히 위험한 바이러스성 장염", symptoms:"구토, 피가 섞인 설사, 식욕 부진, 심한 탈수", contagion:"매우 높음. 분변으로 퍼지고 환경에 오래 남아요.", severity:"중증까지 갈 수 있어요. 어리거나 접종하지 않은 개에게 치명적일 수 있어요.", treat:"특효약은 없고 수액·대증 치료를 해요. 일찍 집중 치료할수록 회복 가능성이 높아져요.", prognosis:"고비를 넘기면 대부분 회복하고, 회복 후에는 면역이 생겨요.", check:"완치 판정을 받았는지, 집에 접종하지 않은 다른 개가 있는지 확인하세요."},
+  "디스템퍼(홍역)": {species:"개", one:"호흡기·소화기·신경계에 영향을 주는 바이러스 질환", symptoms:"발열, 눈곱과 콧물, 기침, 구토·설사, 진행되면 경련 같은 신경 증상", contagion:"높음. 기침·콧물 같은 분비물로 퍼져요.", severity:"중증 질환이에요. 특히 신경 증상이 나타나면 위험해요.", treat:"특효약 없이 증상을 완화하는 치료를 해요.", prognosis:"회복하더라도 근육 떨림 같은 신경 후유증이 남을 수 있어요.", check:"현재 단계(회복기인지), 후유증 여부, 다른 개와의 접촉 가능 시점을 확인하세요."},
+  "심장사상충": {species:"개", one:"모기를 통해 감염되는 기생충이 심장·폐동맥에 사는 질환", symptoms:"기침, 쉽게 지침, 운동을 힘들어함. 초기에는 증상이 없을 수 있어요.", contagion:"개끼리 직접 옮지 않아요. 모기가 매개해요.", severity:"감염 정도에 따라 경증부터 중증까지 다양해요.", treat:"치료 가능하지만 몇 달이 걸리고, 치료 중에는 운동을 엄격히 제한해야 해요.", prognosis:"조기에 치료하면 예후가 좋은 편이에요. 치료 후에는 매달 예방약이 필요해요.", check:"치료 단계, 남은 치료 기간과 비용, 운동 제한 기간을 확인하세요."},
+  "켄넬코프": {species:"개", one:"여러 병원체가 원인인 전염성 기관지염", symptoms:"거위 울음 같은 마른기침, 콧물, 가벼운 발열", contagion:"높음. 여러 마리가 함께 있는 곳에서 잘 퍼져요.", severity:"대부분 경증이에요. 어리거나 나이 많은 개는 폐렴으로 진행하지 않는지 지켜봐야 해요.", treat:"대증 치료나 필요시 항생제로 치료해요.", prognosis:"보통 1~3주 안에 좋아져요.", check:"기침이 멈췄는지, 다른 개와 함께 지내도 되는 시점인지 확인하세요."},
+  "슬개골 탈구": {species:"개", one:"무릎뼈가 제자리에서 빠지는 관절 질환", symptoms:"뒷다리를 들고 깡충거리며 걸음, 다리를 절음", contagion:"전염되지 않아요.", severity:"1~4기로 나뉘어요. 단계가 높을수록 심해요.", treat:"경증은 체중 관리와 미끄럼 방지로 관리하고, 중증은 수술을 고려해요.", prognosis:"관리하면 일상생활이 가능한 경우가 많아요.", check:"몇 기인지, 수술 권고가 있었는지, 집 바닥이 미끄럽지 않은지 확인하세요."},
+  "범백혈구감소증(범백)": {species:"고양이", one:"고양이의 파보바이러스 감염", symptoms:"고열, 구토, 설사, 기력 저하, 백혈구 감소", contagion:"매우 높음. 환경에 오래 남아요.", severity:"중증까지 갈 수 있어요. 새끼 고양이에게 특히 위험해요.", treat:"특효약은 없고 수액·대증 치료를 해요.", prognosis:"고비를 넘기면 회복하고 면역이 생기는 경우가 많아요.", check:"완치 판정 여부, 집에 접종하지 않은 다른 고양이가 있는지 확인하세요."},
+  "허피스(고양이 비기관지염)": {species:"고양이", one:"고양이 감기로 불리는 바이러스성 호흡기 질환", symptoms:"재채기, 콧물, 눈곱, 결막염", contagion:"고양이끼리 옮아요. 사람에게는 옮지 않아요.", severity:"대부분 경증~중등도예요. 새끼 고양이는 탈수나 폐렴을 주의해야 해요.", treat:"증상 완화 치료를 해요.", prognosis:"증상은 좋아지지만 바이러스가 몸에 남아 스트레스를 받으면 재발할 수 있어요.", check:"최근 증상 여부, 재발 시 관리 방법, 다묘 가정이라면 접종 상태를 확인하세요."},
+  "구내염(고양이)": {species:"고양이", one:"잇몸과 입안 점막에 생기는 염증", symptoms:"침 흘림, 입 냄새, 밥을 먹으려다 멈춤, 식욕 저하, 그루밍 감소", contagion:"구내염 자체가 옮는 병은 아니에요. 원인으로 바이러스가 관여할 수 있어 다묘 가정은 수의사와 상의하세요.", severity:"통증이 커서 밥을 못 먹을 만큼 심해질 수 있어요.", treat:"약물로 염증과 통증을 줄이고, 심하면 발치를 하기도 해요.", prognosis:"만성으로 오래 관리하는 경우가 많아요. 발치 후 크게 좋아지는 경우도 있어요.", check:"현재 치료 내용, 발치 권고 여부, 밥을 스스로 먹는지, 예상 치료 비용을 확인하세요."},
+  "피부사상균증(곰팡이성 피부병)": {species:"공통", one:"곰팡이 감염으로 생기는 피부병", symptoms:"동그란 탈모, 각질, 가려움", contagion:"다른 동물과 사람에게도 옮을 수 있어요.", severity:"대부분 경증이에요.", treat:"약욕, 바르는 약, 먹는 약으로 몇 주~몇 달 치료해요.", prognosis:"꾸준히 치료하면 좋은 편이에요.", check:"치료 진행 상황, 가족 중 피부가 약한 사람이나 아이가 있는지 확인하세요."}
+};
+const DISEASE_NOTE = "일반적인 수의 정보를 요약한 안내예요. 이 아이의 실제 상태는 보호소와 담당 수의사에게 꼭 확인하세요.";
+
+/* ---------- demo listings (fictional examples) ---------- */
+const DEMO = [
+  {id:"d1", species:"개", breed:"믹스견", sex:"수컷", neutered:"예", age:"3살 (추정)", weight:12.4, color:"갈색", foundPlace:"예시시 북구 공원 입구", foundDate:daysAgoISO(16), shelter:"예시 보호센터 A", tel:"000-0000-0001", vacc:"완료", daysChecked:2,
+   raw:"온순함, 접종완료", traits:[], behavior:{stranger:"good",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:null,
+   ai:{headline:"사람에게 순하게 다가오는 3살 갈색 믹스견", summary:"공고에는 '온순함'과 접종 완료 정보만 있어요. 낯선 사람에게 순하다는 점 외에 생활 습관 정보는 아직 확인되지 않았어요.", personality:[{trait:"사람에게 온순해요",evidence:"보호자 관찰: 원래 공고의 '온순함'"}],
+    care:[{topic:"주거 환경",text:"12kg 안팎의 중형견이라 아파트에서도 지낼 수 있지만, 짖음 정도를 먼저 확인하는 게 좋아요.",basis:"일반 권고"},{topic:"산책·활동",text:"중형견 기준 하루 2회, 합계 1시간 안팎의 산책을 권장해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"성격 정보가 적어 첫 입양이라면 직접 만나 보고 결정하는 걸 권해요.",basis:"일반 권고"}],
+    health_note:"", missing:["혼자 있을 때 반응(분리불안)","다른 개·고양이와의 관계","아이와의 관계","산책 습관과 배변 가리기","짖음 정도"],
+    questions:["지금도 보호소에서 보호 중인가요?","혼자 있을 때 짖거나 불안해하나요?","산책할 때 줄을 당기거나 다른 개에게 반응하나요?","배변은 실내·실외 중 어디서 하나요?"]}},
+  {id:"d2", species:"개", breed:"진돗개 믹스", sex:"암컷", neutered:"아니오", age:"1살 (추정)", weight:17.0, color:"흰색", foundPlace:"예시시 동구 하천변", foundDate:daysAgoISO(30), shelter:"예시 보호센터 A", tel:"000-0000-0001", vacc:"접종 중", vaccDetail:{list:[{name:"종합백신(DHPPL)",status:"done"},{name:"광견병",status:"ing"}],memo:"광견병 접종 다음 주 예정"}, daysChecked:9,
+   raw:"활발함. 심장사상충 양성", traits:["활발함","호기심 많음"], behavior:{stranger:"mid",dogs:"mid",cats:"unknown",kids:"unknown",walk:"good",alone:"hard",toilet:"good",bark:"mid"}, memo:"산책을 아주 좋아하고 줄 당김은 심하지 않음. 혼자 두면 낑낑거리며 문을 긁음.", disease:{name:"심장사상충",status:"치료 중"},
+   ai:{headline:"산책을 사랑하는 1살 진돗개 믹스, 함께 있는 시간이 필요해요", summary:"산책을 아주 좋아하고 실외 배변을 잘 가려요. 다만 혼자 있으면 낑낑거리며 문을 긁는 모습이 관찰되어, 집에 함께 있는 시간이 긴 가정이 잘 맞아요.", personality:[{trait:"활동량이 많아요",evidence:"보호자 관찰: 산책을 아주 좋아함"},{trait:"혼자 있는 걸 힘들어해요",evidence:"보호자 관찰: 혼자 두면 문을 긁음"},{trait:"처음 보는 사람에게는 조금 시간이 필요해요",evidence:"보호자 관찰: 낯선 사람 반응 '보통'"}],
+    care:[{topic:"주거 환경",text:"17kg 중형견으로 활동 공간이 있는 집이 좋아요. 혼자 두는 시간이 길지 않은 가정을 권해요.",basis:"보호자 관찰"},{topic:"산책·활동",text:"활발한 중형견이라 하루 2회, 합계 1시간 30분 안팎의 산책을 권장해요. 단, 심장사상충 치료 중에는 수의사가 정한 운동 제한을 따라야 해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"분리불안 교육과 치료 관리가 필요해 반려견을 키워본 경험이 있으면 좋아요.",basis:"일반 권고"},{topic:"다른 동물·아이",text:"다른 개와는 '보통'으로 관찰됐어요. 아이·고양이와의 관계는 아직 확인되지 않았어요.",basis:"보호자 관찰"}],
+    health_note:"심장사상충 치료를 받고 있어요. 치료 기간에는 산책과 운동을 제한해야 하니, 남은 치료 기간과 비용을 꼭 확인하세요.", missing:["아이와의 관계","고양이와의 관계","남은 치료 기간과 예상 비용"],
+    questions:["지금도 보호소에서 보호 중인가요?","심장사상충 치료는 어느 단계이고 언제 끝나나요?","치료 중 산책은 어느 정도까지 가능한가요?","혼자 있는 시간에 적응시키는 훈련을 해 본 적이 있나요?"]}},
+  {id:"d3", species:"고양이", breed:"코리안숏헤어", sex:"암컷", neutered:"아니오", age:"6개월", weight:2.1, color:"고등어", foundPlace:"예시시 남구 주택가", foundDate:daysAgoISO(12), shelter:"예시 보호센터 B", tel:"000-0000-0002", vacc:"접종 중", vaccDetail:{list:[{name:"종합백신(FVRCP)",status:"ing"}],memo:"2차까지 완료, 3차 예정"}, daysChecked:0,
+   raw:"사람 좋아함, 허피스 증상 있음", traits:["사람을 좋아함","애교 많음"], behavior:{stranger:"good",dogs:"unknown",cats:"good",kids:"unknown",walk:"unknown",alone:"mid",toilet:"good",bark:"good"}, memo:"사람 무릎에 올라와 잠. 다른 아기 고양이들과 잘 놂. 화장실 잘 가림.", disease:{name:"허피스(고양이 비기관지염)",status:"지속 관리"},
+   ai:{headline:"무릎에서 잠드는 6개월 고등어 아기 고양이",summary:"사람을 좋아해 무릎에 올라와 자고, 다른 아기 고양이들과도 잘 놀아요. 화장실도 잘 가려요. 허피스 증상이 있어 꾸준한 관리가 필요해요.",personality:[{trait:"사람을 아주 좋아해요",evidence:"보호자 관찰: 무릎에 올라와 잠"},{trait:"다른 고양이와 잘 지내요",evidence:"보호자 관찰: 아기 고양이들과 잘 놂"}],
+    care:[{topic:"주거 환경",text:"캣타워 같은 높은 공간과 숨을 곳이 있으면 좋아요. 방묘창 설치를 권장해요.",basis:"일반 권고"},{topic:"놀이·활동",text:"어린 고양이라 하루 2~3회, 10~15분씩 사냥 놀이를 권장해요.",basis:"일반 권고"},{topic:"다른 동물·아이",text:"다른 고양이와 잘 지내는 모습이 관찰됐어요. 개·아이와의 관계는 아직 확인되지 않았어요.",basis:"보호자 관찰"}],
+    health_note:"허피스로 재채기·눈곱 같은 증상이 있어요. 증상은 관리할 수 있지만 스트레스를 받으면 재발할 수 있어요.",missing:["개와의 관계","아이와의 관계","중성화 예정 여부"],
+    questions:["지금도 보호소에서 보호 중인가요?","허피스 증상은 요즘 어느 정도인가요?","남은 접종 일정은 어떻게 되나요?","중성화 수술 계획이 있나요?"]}},
+  {id:"d4", species:"고양이", breed:"코리안숏헤어", sex:"수컷", neutered:"예", age:"5살 (추정)", weight:5.3, color:"치즈", foundPlace:"예시시 중구 상가 지하", foundDate:daysAgoISO(40), shelter:"예시 보호센터 B", tel:"000-0000-0002", vacc:"완료", daysChecked:5,
+   raw:"겁 많음", traits:["소심함","겁이 많음","독립적"], behavior:{stranger:"hard",dogs:"unknown",cats:"mid",kids:"unknown",walk:"unknown",alone:"good",toilet:"good",bark:"good"}, memo:"처음 보는 사람이 오면 숨지만, 담당자에게는 일주일쯤 지나 먼저 다가와 머리를 비빔.", disease:null,
+   ai:{headline:"마음을 여는 데 일주일, 그 뒤엔 먼저 다가오는 5살 치즈 고양이",summary:"처음 보는 사람이 오면 숨지만, 익숙해지면 먼저 다가와 머리를 비벼요. 혼자서도 잘 지내고 화장실도 잘 가려요.",personality:[{trait:"낯을 많이 가려요",evidence:"보호자 관찰: 처음 보는 사람이 오면 숨음"},{trait:"익숙해지면 다정해요",evidence:"보호자 관찰: 일주일쯤 지나 먼저 다가옴"},{trait:"혼자서도 잘 지내요",evidence:"보호자 관찰: 혼자 있기 '좋음'"}],
+    care:[{topic:"주거 환경",text:"숨을 수 있는 공간과 조용한 환경이 좋아요. 방문객이 잦은 집은 적응에 시간이 더 걸릴 수 있어요.",basis:"보호자 관찰"},{topic:"놀이·활동",text:"성묘 기준 하루 2회 정도 짧은 놀이를 권장해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"적응 기간을 기다려 줄 수 있는 보호자에게 잘 맞아요.",basis:"보호자 관찰"}],
+    health_note:"",missing:["개와의 관계","아이와의 관계"],
+    questions:["지금도 보호소에서 보호 중인가요?","새 환경에 적응할 때 밥은 잘 먹었나요?","입양 전에 몇 번 만나러 가도 되나요?"]}},
+  {id:"d5", species:"토끼", breed:"믹스", sex:"수컷", neutered:"모름", age:"1살 (추정)", weight:1.8, color:"흰색·회색", foundPlace:"예시시 서구 아파트 화단", foundDate:daysAgoISO(8), shelter:"예시 보호센터 A", tel:"000-0000-0001", vacc:"모름", daysChecked:4,
+   raw:"건강함", traits:[], behavior:{stranger:"unknown",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:null,
+   ai:{headline:"보호소에서 새 가족을 기다리는 1살 토끼",summary:"공고에는 '건강함' 외의 정보가 거의 없어요. 성격과 생활 습관은 보호소에 직접 확인이 필요해요.",personality:[],
+    care:[{topic:"주거 환경",text:"넓은 울타리나 케이지와 함께, 하루 몇 시간은 안전하게 돌아다닐 공간이 필요해요. 전선은 갉지 않게 정리해야 해요.",basis:"일반 권고"},{topic:"식사",text:"건초를 주식으로, 신선한 채소와 물을 늘 준비해야 해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"토끼는 개·고양이와 돌봄 방식이 달라 토끼 전문 동물병원이 가까운지 먼저 확인하세요.",basis:"일반 권고"}],
+    health_note:"",missing:["사람 손길에 대한 반응","배변 가리기","중성화 여부","치아·소화 건강 상태"],
+    questions:["지금도 보호소에서 보호 중인가요?","사람이 안거나 만지는 것을 편하게 받아들이나요?","배변은 정해진 곳에서 하나요?","중성화가 되어 있나요?"]}},
+  {id:"d6", species:"개", breed:"말티즈", sex:"암컷", neutered:"예", age:"8살 (추정)", weight:3.2, color:"흰색", foundPlace:"예시시 북구 버스정류장", foundDate:daysAgoISO(21), shelter:"예시 보호센터 A", tel:"000-0000-0001", vacc:"완료", daysChecked:1,
+   raw:"차분함, 슬개골 탈구 2기", traits:["차분함","사람을 좋아함"], behavior:{stranger:"good",dogs:"good",cats:"unknown",kids:"mid",walk:"mid",alone:"mid",toilet:"good",bark:"good"}, memo:"안아 주면 가만히 있음. 산책은 15분 정도 걸으면 쉬려 함. 배변패드 사용.", disease:{name:"슬개골 탈구",status:"지속 관리"},
+   ai:{headline:"안아 주면 가만히 기대는 8살 말티즈",summary:"차분하고 사람을 좋아해요. 배변패드를 쓰고 거의 짖지 않아요. 슬개골 탈구 2기라 미끄럽지 않은 바닥과 체중 관리가 필요해요.",personality:[{trait:"차분하고 사람을 좋아해요",evidence:"보호자 관찰: 안아 주면 가만히 있음"},{trait:"다른 개와 잘 지내요",evidence:"보호자 관찰: 다른 개 '좋음'"}],
+    care:[{topic:"주거 환경",text:"3kg 소형견이라 원룸·아파트 모두 가능해요. 슬개골 보호를 위해 미끄럼 방지 매트를 권장해요.",basis:"일반 권고"},{topic:"산책·활동",text:"15분 정도 걸으면 쉬려 해요. 짧은 산책을 하루 2회 정도로 나눠 주세요.",basis:"보호자 관찰"},{topic:"추천 보호자 경험",text:"노령견 돌봄과 정기 검진을 챙길 수 있는 보호자에게 잘 맞아요.",basis:"일반 권고"},{topic:"다른 동물·아이",text:"다른 개와는 잘 지내요. 아이와는 '보통'으로 관찰돼, 어린아이가 있다면 먼저 만나 보는 걸 권해요.",basis:"보호자 관찰"}],
+    health_note:"슬개골 탈구 2기로 지속 관리가 필요해요. 단계에 따라 수술이 필요할 수 있어 담당 수의사 소견을 확인하세요.",missing:["고양이와의 관계","최근 건강검진 결과(노령견)"],
+    questions:["지금도 보호소에서 보호 중인가요?","슬개골 수술 권고가 있었나요?","최근 혈액검사 같은 건강검진 결과가 있나요?"]}}
+];
+
+/* ---------- real public notices (농림축산검역본부 구조동물 조회 서비스, 2026-10-27 수집) ---------- */
+const REAL = [
+  {id:"r1", noticeNo:"경기-화성-2026-01450", species:"개", breed:"믹스견", sex:"수컷", neutered:"모름", age:"2021년생 (약 5살)", weight:28, color:"흰색", foundPlace:"팔탄면 화당리 인근", foundDate:"2026-10-07", shelter:"화성시민동물보호센터", tel:"010-3969-1034", vacc:"모름", lastChecked:"2026-10-08",
+   raw:"덩치는 크지만 순딩이 성격/ 겁은 있으나 공격성은 없어보임/ 적응하는중", traits:["겁이 많음"], behavior:{stranger:"unknown",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:null,
+   ai:{headline:"덩치는 크지만 순한 5살 흰색 믹스견", summary:"28kg 대형견으로, 덩치는 크지만 순한 성격이라고 기록됐어요. 겁은 있지만 공격성은 없어 보이고, 보호소에 적응하는 중이에요. 생활 습관 정보는 공고에 없어요.", personality:[{trait:"순한 성격이에요",evidence:"보호자 관찰: '순딩이 성격'"},{trait:"겁은 있지만 공격성은 없어 보여요",evidence:"보호자 관찰: '겁은 있으나 공격성은 없어보임'"}],
+    care:[{topic:"주거 환경",text:"28kg 대형견이라 넓은 실내 공간이나 마당이 있는 집이 좋아요.",basis:"일반 권고"},{topic:"산책·활동",text:"대형견 기준 하루 2회, 합계 1시간 30분 안팎의 산책을 권장해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"겁이 있는 편이라 새 환경에 적응할 때까지 천천히 기다려 줄 수 있는 보호자가 잘 맞아요. 대형견을 다뤄 본 경험이 있으면 더 좋아요.",basis:"보호자 관찰"}],
+    health_note:"", missing:["다른 개·고양이와의 관계","아이와의 관계","혼자 있을 때 반응","산책 습관(줄 당김 등)","배변 가리기","중성화·접종 여부"],
+    questions:["지금도 보호소에서 보호 중인가요?","산책할 때 줄을 당기거나 다른 개에게 반응하나요?","혼자 있을 때 짖거나 불안해하나요?","중성화와 접종은 되어 있나요?"]}},
+  {id:"r2", noticeNo:"충남-천안-2026-00573", species:"개", breed:"라이카", sex:"암컷", neutered:"아니오", age:"2026년생 (8개월 추정)", weight:13, color:"검정·황갈색·흰색", foundPlace:"동남구 목천읍", foundDate:"2026-10-18", shelter:"천안시 동물보호센터", tel:"010-5913-5119", vacc:"완료", vaccDetail:{list:[{name:"종합백신",status:"done"},{name:"광견병",status:"done"},{name:"코로나 장염",status:"done"}],memo:""}, lastChecked:"2026-10-19",
+   raw:"8개월 추정, 활발함, 매우 순함, 사람 매우 좋아함, 목줄착용", traits:["활발함","사람을 좋아함"], behavior:{stranger:"good",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:null,
+   ai:{headline:"사람을 아주 좋아하는 8개월 활발한 라이카", summary:"8개월로 추정되는 어린 개로, 활발하고 매우 순하며 사람을 아주 좋아한다고 기록됐어요. 발견 당시 목줄을 하고 있었어요. 종합백신, 광견병, 코로나 장염 접종 기록이 있어요.", personality:[{trait:"사람을 아주 좋아해요",evidence:"보호자 관찰: '사람 매우 좋아함'"},{trait:"활발하고 순해요",evidence:"보호자 관찰: '활발함, 매우 순함'"}],
+    care:[{topic:"산책·활동",text:"활발한 13kg 중형견이라 하루 2회, 합계 1시간 30분 안팎의 산책과 놀이를 권장해요.",basis:"일반 권고"},{topic:"주거 환경",text:"중형견이라 아파트에서도 지낼 수 있지만, 에너지를 풀 수 있는 활동 시간이 충분해야 해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"어리고 활발한 시기라 기본 훈련과 사회화에 시간을 쓸 수 있는 보호자가 잘 맞아요.",basis:"일반 권고"}],
+    health_note:"", missing:["다른 개·고양이와의 관계","아이와의 관계","혼자 있을 때 반응","배변 가리기","중성화 계획"],
+    questions:["지금도 보호소에서 보호 중인가요?","혼자 있을 때 짖거나 불안해하나요?","다른 개와 만났을 때 반응은 어떤가요?","중성화 수술 계획이 있나요?"]}},
+  {id:"r3", noticeNo:"부산-서구-2026-00266", species:"개", breed:"푸들", sex:"암컷", neutered:"아니오", age:"2025년생 (약 1살)", weight:2.5, color:"흰색", foundPlace:"구덕로193번길", foundDate:"2026-10-09", shelter:"부산동물보호센터", tel:"051-832-7119", vacc:"모름", lastChecked:"2026-10-27",
+   raw:"온순함,털관리가되어있음,샴푸향이남,서구1-61", traits:[], behavior:{stranger:"unknown",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:null,
+   ai:{headline:"털 관리가 잘 된 1살 온순한 흰색 푸들", summary:"온순하고, 발견 당시 털 관리가 되어 있었고 샴푸 향이 났다고 기록됐어요. 성격과 생활 습관은 '온순함' 외에 공고에 없어요.", personality:[{trait:"온순해요",evidence:"보호자 관찰: '온순함'"}],
+    care:[{topic:"주거 환경",text:"2.5kg 소형견이라 원룸·아파트 모두 가능해요. 미끄럼 방지 바닥을 권장해요.",basis:"일반 권고"},{topic:"산책·활동",text:"소형견 기준 하루 2회, 합계 30분 안팎의 산책을 권장해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"푸들은 털이 계속 자라 정기적인 미용과 빗질이 필요해요.",basis:"일반 권고"}],
+    health_note:"", missing:["다른 개·고양이와의 관계","아이와의 관계","혼자 있을 때 반응","배변 가리기","접종·건강 상태"],
+    questions:["지금도 보호소에서 보호 중인가요?","공고 기간이 끝나 입양 신청이 가능한 날짜는 언제인가요?","배변패드나 실외 배변 중 어느 쪽을 하나요?","접종이나 건강검진 기록이 있나요?"]}},
+  {id:"r4", noticeNo:"전북-익산-2026-01461", species:"개", breed:"믹스견", sex:"수컷", neutered:"아니오", age:"2022년생 (약 4살)", weight:8, color:"검정·흰색", foundPlace:"익산시 낭산면", foundDate:"2026-10-23", shelter:"익산유기동물보호소", tel:"063-855-1214", vacc:"모름", lastChecked:"2026-10-26",
+   raw:"검정목태를 하고 있으며 사람에 대한경계심이 있음", traits:[], behavior:{stranger:"hard",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:null,
+   ai:{headline:"마음을 열 시간이 필요한 4살 흑백 믹스견", summary:"발견 당시 검정 목줄(목태)을 하고 있었고, 사람에 대한 경계심이 있다고 기록됐어요. 경계심 외의 성격과 생활 습관은 공고에 없어요.", personality:[{trait:"사람을 경계해요",evidence:"보호자 관찰: '사람에 대한 경계심이 있음'"}],
+    care:[{topic:"주거 환경",text:"8kg 소형견이라 원룸·아파트 모두 가능해요. 경계심이 있어 조용하고 숨을 곳이 있는 환경이 좋아요.",basis:"보호자 관찰"},{topic:"산책·활동",text:"소형견 기준 하루 2회, 합계 30분 안팎의 산책을 권장해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"경계심이 있는 개를 천천히 기다려 줄 수 있는, 반려견 경험이 있는 보호자가 잘 맞아요.",basis:"보호자 관찰"}],
+    health_note:"", missing:["경계심이 어느 정도인지(입질 여부)","다른 개·고양이와의 관계","아이와의 관계","혼자 있을 때 반응","접종·건강 상태"],
+    questions:["지금도 보호소에서 보호 중인가요?","사람을 경계할 때 짖나요, 피하나요, 입질을 하나요?","담당자에게는 마음을 연 편인가요?","입양 전에 여러 번 만나러 가도 되나요?"]}},
+  {id:"r5", noticeNo:"전북-익산-2026-01466", species:"고양이", breed:"한국 고양이", sex:"수컷", neutered:"아니오", age:"2026년생 (10개월 추정)", weight:2.8, color:"검정색", foundPlace:"원광대학교 기숙사 앞", foundDate:"2026-10-25", shelter:"익산유기동물보호소", tel:"063-855-1214", vacc:"모름", lastChecked:"2026-10-26",
+   raw:"생후 10개월정도 되었음. 사람을 좋아하고 잘따름", traits:["사람을 좋아함"], behavior:{stranger:"good",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:null,
+   ai:{headline:"사람을 좋아하고 잘 따르는 10개월 검은 고양이", summary:"생후 10개월 정도로 보이고, 사람을 좋아하며 잘 따른다고 기록됐어요. 화장실 사용과 다른 동물과의 관계는 공고에 없어요.", personality:[{trait:"사람을 좋아하고 잘 따라요",evidence:"보호자 관찰: '사람을 좋아하고 잘따름'"}],
+    care:[{topic:"주거 환경",text:"캣타워 같은 높은 공간과 숨을 곳, 방묘창 설치를 권장해요.",basis:"일반 권고"},{topic:"놀이·활동",text:"어린 고양이라 하루 2~3회, 10~15분씩 사냥 놀이를 권장해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"사람을 잘 따라 처음 고양이를 키우는 보호자도 시작하기 좋아요. 중성화 계획은 미리 세워 두세요.",basis:"일반 권고"}],
+    health_note:"", missing:["화장실(모래) 사용","다른 고양이·개와의 관계","접종·건강 상태","중성화 계획"],
+    questions:["지금도 보호소에서 보호 중인가요?","화장실은 잘 가리나요?","접종이나 건강검진 기록이 있나요?","다른 고양이와 함께 지내 본 적이 있나요?"]}},
+  {id:"r6", noticeNo:"전북-전주-2026-00894", species:"고양이", breed:"한국 고양이", sex:"수컷", neutered:"예", age:"2023년생 (약 3살)", weight:3.1, color:"흰색·검정 얼룩", foundPlace:"효자공원", foundDate:"2026-09-16", shelter:"링크늘푸른동물병원", tel:"063-281-0075", vacc:"모름", lastChecked:"2026-09-16",
+   raw:"구내염심함,사람손 잘 탐,티엔알돼있음", traits:["사람을 좋아함"], behavior:{stranger:"good",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:{name:"구내염(고양이)",status:"상태 확인 필요"},
+   ai:{headline:"사람 손길을 잘 받아 주는 3살 얼룩 고양이", summary:"사람 손을 잘 타는 고양이로, TNR(중성화 후 방사) 기록이 있어요. 구내염이 심하다고 기록돼 있어 치료 계획 확인이 꼭 필요해요.", personality:[{trait:"사람 손길을 잘 받아 줘요",evidence:"보호자 관찰: '사람손 잘 탐'"}],
+    care:[{topic:"주거 환경",text:"높은 공간과 숨을 곳, 방묘창 설치를 권장해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"구내염은 오래 관리해야 하는 경우가 많아 통원 치료와 비용을 감당할 수 있는 보호자가 잘 맞아요.",basis:"일반 권고"}],
+    health_note:"구내염이 심하다고 기록돼 있어요. 현재 치료 여부와 앞으로의 치료 계획(약물, 발치 등)을 꼭 확인하세요.", missing:["구내염 치료 상태와 계획","화장실 사용","다른 동물과의 관계","접종 여부"],
+    questions:["지금도 병원(보호소)에서 보호 중인가요?","구내염은 지금 치료 중인가요? 발치 같은 치료가 필요하다는 소견이 있었나요?","밥은 잘 먹나요?","화장실은 잘 가리나요?"]}},
+  {id:"r7", noticeNo:"부산-사하-2026-00347", species:"고양이", breed:"브리티시 쇼트헤어", sex:"암컷", neutered:"아니오", age:"2024년생 (약 2살)", weight:2, color:"황토색·흰색", foundPlace:"괴정동 일대", foundDate:"2026-10-16", shelter:"부산동물보호센터", tel:"051-832-7119", vacc:"모름", lastChecked:"2026-10-20",
+   raw:"온순하고사람을좋아함,길에떠돌아다님,털이깨끗함,", traits:["사람을 좋아함"], behavior:{stranger:"good",dogs:"unknown",cats:"unknown",kids:"unknown",walk:"unknown",alone:"unknown",toilet:"unknown",bark:"unknown"}, memo:"", disease:null,
+   ai:{headline:"온순하고 사람을 좋아하는 2살 브리티시 쇼트헤어", summary:"길에서 떠돌던 중 구조됐고, 온순하고 사람을 좋아하며 털이 깨끗했다고 기록됐어요. 생활 습관 정보는 공고에 없어요.", personality:[{trait:"온순하고 사람을 좋아해요",evidence:"보호자 관찰: '온순하고 사람을 좋아함'"}],
+    care:[{topic:"주거 환경",text:"높은 공간과 숨을 곳, 방묘창 설치를 권장해요.",basis:"일반 권고"},{topic:"놀이·활동",text:"성묘 기준 하루 2회 정도 짧은 놀이를 권장해요.",basis:"일반 권고"},{topic:"추천 보호자 경험",text:"사람을 좋아해 처음 고양이를 키우는 보호자도 시작하기 좋아요.",basis:"보호자 관찰"}],
+    health_note:"", missing:["화장실 사용","다른 고양이·개와의 관계","접종·건강 상태","중성화 계획"],
+    questions:["지금도 보호소에서 보호 중인가요?","공고 기간이 끝나 입양 신청이 가능한 날짜는 언제인가요?","화장실은 잘 가리나요?","건강검진 기록이 있나요?"]}}
+];
+/* 공공데이터 보호 중 공고 (지역별 최근 5건), 2026-10-27 수집 */
+const REAL2_ROWS = [["445468202602924", "전북-익산-2026-01489", "개", "믹스견", "암컷", "아니오", "2026년생", 3.5, "흰색", "익산시 용안면 용안로 238", "2026-10-27", "익산유기동물보호소", "063-855-1214", "2026-10-28", "생후 3.5개월 정도로, 사람을 좋아하고 동배 중 유독 덩치가 큼", ""], ["445468202602923", "전북-익산-2026-01488", "개", "믹스견", "암컷", "아니오", "2026년생", 2.0, "흰색", "익산시 용안면 용안로 238", "2026-10-27", "익산유기동물보호소", "063-855-1214", "2026-10-28", "생후 3.5개월 정도로, 사람을 좋아하고 동배 중 유독 작음", ""], ["445468202602922", "전북-익산-2026-01487", "개", "믹스견", "수컷", "아니오", "2026년생", 3.0, "흰색", "익산시 용안면 용안로 238", "2026-10-27", "익산유기동물보호소", "063-855-1214", "2026-10-28", "생후 3.5개월 정도로, 다리가 길고 사람을 좋아함", ""], ["447512202600668", "경북-문경-2026-00353", "고양이", "한국 고양이", "수컷", "아니오", "2025년생 (약 1살)", 2.7, "평행·전체·부분줄무늬", "문경 호텔신축공사장", "2026-10-27", "종합축산", "054-552-2233", "2026-10-28", "걸음이 부자연스럽고 잘먹지 못함", ""], ["445468202602921", "전북-익산-2026-01486", "개", "믹스견", "수컷", "아니오", "2026년생", 3.5, "검정&흰색", "익산시 용안면 용안로 238", "2026-10-27", "익산유기동물보호소", "063-855-1214", "2026-10-28", "생후 3.5개월 정도로, 다리가 길고 사람을 좋아함", ""], ["445468202602920", "전북-익산-2026-01485", "개", "믹스견", "수컷", "아니오", "2026년생", 3.0, "갈색&흰색", "익산시 용안면 용안로 238", "2026-10-27", "익산유기동물보호소", "063-855-1214", "2026-10-28", "생후 3.5개월 정도로, 다리가 길고 사람을 좋아함", ""], ["441417202601391", "경기-양평-2026-00303", "개", "믹스견", "암컷", "아니오", "2026년생", 3.2, "흰색", "경기도 양평군 양동면 윗배내길 110", "2026-10-16", "양평군유기동물보호소", "031-770-2337", "2026-10-28", "양쪽 귀가 아래로 처져 있음, 호기심 많으며 온순함", ""], ["441417202601189", "경기-양평-2026-00268", "개", "믹스견", "수컷", "모름", "2018년생 (약 8살)", 8.0, "금색&흰색", "경기도 양평군 옥천면 옥천길 65", "2026-09-16", "양평군유기동물보호소", "031-770-2337", "2026-10-28", "사람을 좋아하고 만져도 피하지 않는 친화력 좋은 성격", ""], ["441417202601082", "경기-양평-2026-00215", "개", "믹스견", "수컷", "아니오", "2021년생 (약 5살)", 26.4, "금색", "경기도 양평군 양동면 범데미길 92", "2026-08-03", "양평군유기동물보호소", "031-770-2337", "2026-10-28", "사람에게 경계심은 있지만 공격성은 없고 온순한 성격", ""], ["441417202600818", "경기-양평-2026-00168", "개", "믹스견", "수컷", "예", "2021년생 (약 5살)", 10.0, "흰색", "경기도 양평군 옥천면 마유산로 504-19", "2026-06-27", "양평군유기동물보호소", "031-770-2337", "2026-10-28", "온순한 편이나 겁이 많고 경계하는 모습, 몸통 뒷쪽 털이 엉켜있음", ""], ["411322202600525", "서울-강남-2026-00061", "개", "믹스견", "암컷", "모름", "2022년생 (약 4살)", 4.2, "흰색", "서울 강남구 구룡사거리 인근", "2026-10-27", "한국동물구조관리협회", "031-867-9119", "2026-10-28", "온순. 얌전. 친화적. 코 갈색. 눈물 자국. 넥카라 착용. 꼬리 단미 안됨. 털 상태 양호. 칩 있음.", ""], ["411317202600535", "서울-금천-2026-00134", "고양이", "한국 고양이", "암컷", "모름", "2023년생 (약 3살)", 4.7, "흰색/검은색 얼룩무늬", "서울 금천구 시흥동 228-13 인근", "2026-10-27", "한국동물구조관리협회", "031-867-9119", "2026-10-28", "온순. 얌전. 사람 손탐. 왼쪽 귀 이표. 우안 눈곱 심함/눈 못 뜸. 눈곱. 콧물. 털 상태 양호.", ""], ["441406202601332", "경기-파주-2026-00748", "개", "믹스견", "수컷", "예", "2026년생", 6.1, "흰색", "경기 파주시 적성면 칠중7길 100-54 인근", "2026-10-27", "한국동물구조관리협회", "031-867-9119", "2026-10-28", "온순. 얌전. 콧잔등 분홍. 꼬리 단미 안됨. 털 약간 때탐.", ""], ["444450202600907", "충남-공주-2026-00247", "개", "말티즈", "수컷", "아니오", "2025년생 (약 1살)", 3.4, "흰색", "공주시 연수원길 107", "2026-10-27", "공주시 동물보호센터", "041-840-3495", "2026-10-28", "심장사상충&파보 음성, 종합&광견병 백신, 심장사상충약", "광견병,종합백신"], ["411300202600678", "서울-종로-2026-00151", "고양이", "한국 고양이", "암컷", "모름", "2024년생 (약 2살)", 2.9, "검은색흰색황토색조합", "서울 종로구 정릉터널 인근", "2026-10-27", "한국동물구조관리협회", "031-867-9119", "2026-10-28", "온순. 겁 조금. 양후지 파행(다리기립불가). 혈액섞인 변.  털 때탐.", ""], ["411311202600606", "서울-은평-2026-00220", "개", "믹스견", "암컷", "모름", "2026년생", 7.6, "갈색&검정", "서울 은평구 은평로 240 (응암동, 힐스테이트녹번역)", "2026-10-27", "한국동물구조관리협회", "031-867-9119", "2026-10-28", "입질심함. 겁 많음. 꼬리 털 검정. 설사 있었음. 꼬리 단미 안됨. 털 상태 양호.", ""], ["428356202601482", "인천-서해-2026-00165", "개", "비숑 프리제", "수컷", "아니오", "2022년생 (약 4살)", 3.1, "크림색", "감중공원", "2026-10-21", "쉼터동물병원", "032-721-8559", "2026-10-28", "눈물 자국 심함 하네스 찬 상태로 발견? 귀여움", ""], ["413582202600773", "광주-북구-2026-00131", "개", "믹스견", "암컷", "모름", "2025년생 (약 1살)", 17.0, "노란색", "북구 장덕동", "2026-10-03", "광주동물보호센터", "062-613-6770", "2026-10-28", "26-0560 아꿍 초록색 목줄 착용", ""], ["413581202600672", "광주-서구-2026-00094", "개", "믹스견", "암컷", "모름", "2016년생 (약 10살)", 4.1, "갈색&검정&흰색", "서구 화정동", "2026-10-16", "광주동물보호센터", "062-613-6770", "2026-10-28", "26-05978 고베", ""], ["413582202600774", "광주-광산-2026-00115", "개", "믹스견", "수컷", "예", "2025년생 (약 1살)", 9.5, "갈색&검정&흰색", "광산구 삼도농협", "2026-10-03", "광주동물보호센터", "062-613-6770", "2026-10-28", "26-0561 동주 목부위 창상", ""], ["413585202600357", "광주-보성-2026-00091", "개", "믹스견", "암컷", "아니오", "2022년생 (약 4살)", 14.3, "흰색", "보성읍 태평길 19-75", "2026-10-27", "보성유기동물보호센터", "061-853-5405", "2026-10-28", "온순함, 구조시 회색 리드줄 및 빨간색 목줄 착용", ""], ["411304202600367", "서울-광진-2026-00065", "고양이", "한국 고양이", "암컷", "모름", "2024년생 (약 2살)", 2.0, "기타(검)", "서울 광진구 자양로21길 8 (자양동, 경일빌라) 인근", "2026-10-23", "한국동물구조관리협회", "031-867-9119", "2026-10-28", "교통사고추정. 코 검정. 눈곱. 이표. 척추 이상. 기립불능. 온순. 털 상태 양호.", ""], ["447505202601032", "경북-경주-2026-00859", "개", "화이트테리어", "수컷", "예", "2022년생 (약 4살)", 8.0, "흰색", "문무대왕면 기림로 도로 주변", "2026-10-27", "경주동물사랑보호센터", "010-8889-2883", "2026-10-28", "도로에서 발견되었어요 ! 애기 기다리고 있으니까 보호자분 얼른 데리러오세요 ~", ""], ["442420202600558", "강원-강릉-2026-00337", "개", "믹스견", "암컷", "모름", "2024년생 (약 2살)", 7.0, "갈색&검정&흰색", "강원대학교 강릉캠퍼스 ", "2026-10-27", "강릉시 동물사랑센터", "033-641-7515", "2026-10-28", "목줄없이 발견, 심장사상충 감염", ""], ["442420202600102", "강원-강릉-2026-00102", "개", "믹스견", "수컷", "예", "2026년생", 7.8, "갈색", "사천면 순포습지 부근 풀숲", "2026-04-08", "강릉시 동물사랑센터", "033-641-7515", "2026-10-28", "7마리 함께 발견, 생후 1.5개월 추정", ""], ["442420202600557", "강원-강릉-2026-00336", "개", "믹스견", "수컷", "아니오", "2024년생 (약 2살)", 8.0, "검정&흰색", "회산로 411", "2026-10-25", "강릉시 동물사랑센터", "033-641-7515", "2026-10-28", "파란색 목줄착용, 온순함", ""], ["442420202600497", "강원-강릉-2026-00297", "개", "믹스견", "수컷", "아니오", "2021년생 (약 5살)", 6.7, "금색&흰색", "선교장 입구", "2026-09-28", "강릉시 동물사랑센터", "033-641-7515", "2026-10-28", "심장사상충 3기 신고자분이 치료하심", ""], ["428350202600563", "인천-제물포-2026-00075", "개", "믹스견", "수컷", "아니오", "2025년생 (약 1살)", 14.0, "흰색", "방축로83번길23 산업유통센타 2단지와3단지 사이", "2026-10-27", "경동동물병원", "032-765-9988", "2026-10-28", "사람을 물었다고 신고가 되어 119에서 구조", ""], ["444453202601169", "충남-서산-2026-00555", "개", "프렌치 불독", "암컷", "아니오", "2021년생 (약 5살)", 5.0, "기타(검정)", "대산읍 평신1로 87", "2026-10-19", "서산시 동물보호센터", "041-660-2040", "2026-10-28", "순함, 입소 당시 좌측 후지 탈구, 우측 후지 보행 불편 호소, 발 피부질환", ""], ["446481202600662", "전남-여수-2026-00217", "개", "믹스견", "암컷", "아니오", "2026년생", 3.8, "흰색", "화동로 183-7", "2026-06-12", "반려동물보호센터", "061-659-2474", "2026-10-28", "온순함 / 심장사상충 약 복용 / 종합백신&광견병 접종 완료 (7.21)", ""], ["443445202600668", "충북-진천-2026-00315", "개", "믹스견", "암컷", "모름", "2023년생 (약 3살)", 17.0, "기타(크림색)", "진천 덕산읍 기전2길 10-5", "2026-09-25", "증평 가정견 훈련소", "010-3169-1151", "2026-10-28", "사나움/마이크로칩없음/전반적인건강은양호함", ""], ["444454202601169", "충남-논산-2026-00727", "개", "믹스견", "암컷", "아니오", "2024년생 (약 2살)", 7.7, "흰색", "부적면", "2026-10-27", "논산시 동물보호센터", "041-746-8470", "2026-10-28", "7마리구조(모견1,자견6),모견", "광견병,종합백신,코로나,호흡기"], ["428349202600788", "인천-영종-2026-00152", "개", "믹스견", "수컷", "아니오", "2026년생", 4.6, "갈색", "운남동로 9 인근", "2026-10-27", "신공항동물병원", "032-751-4598", "2026-10-28", "4개월령추정, 매우 순하고 사람을 잘 따름", ""], ["448567202601413", "경남-창원1-2026-00698", "개", "믹스견", "수컷", "예", "2026년생", 6.4, "갈색&검정&흰색", "마산합포구 구산면 구복리 194-33", "2026-10-01", "창원동물보호센터", "055-225-5701", "2026-10-28", "소방서 인계, 26년 1월생 추정, 착용품 없음", ""], ["426330202600418", "부산-동래-2026-00274", "고양이", "믹스묘", "수컷", "아니오", "2008년생 (약 18살)", 0.23, "기타(검정)", "명안로 65, 안락초등학교 인근", "2026-10-27", "(사)동부동물보호협회", "051-701-7599", "2026-10-28", "호흡기 질환, 마름, 기력저하", ""], ["446487202600108", "전남-구례-2026-00045", "개", "잭 러셀 테리어", "암컷", "아니오", "2023년생 (약 3살)", 8.0, "검정&흰색", "구례군 토지면 구산길77-33", "2026-05-04", "구례군동물보호센터", "061-781-2022", "2026-10-28", "5월6일 심장사상충,홍역,파보키트검사, 광견병,종합백신접종", "광견병,종합백신"], ["426335202600719", "부산-금정-2026-00256", "개", "믹스견", "수컷", "아니오", "2019년생 (약 7살)", 4.6, "흰색", "금정로 127", "2026-10-27", "동부동물보호협회", "051-701-7599", "2026-10-28", "소유자 소유권 포기, 겁 많음", ""], ["448567202601129", "경남-창원1-2026-00549", "개", "믹스견", "암컷", "아니오", "2023년생 (약 3살)", 11.0, "옅은 황색", "의창구 북면 고암리 271-6", "2026-08-18", "창원동물보호센터", "055-225-5701", "2026-10-28", "착용품 없음, 자견과 함께 입소", ""], ["443571202602417", "충북-청주-2026-00879", "고양이", "브리티시 쇼트헤어", "수컷", "예", "2022년생 (약 4살)", 3.4, "기타(회색, 갈색)", "청원구 과학산업1로 102번지 부근", "2026-10-27", "반려동물보호센터", "043-201-2298", "2026-10-28", "공고기간 종료 후 신고자 입양 예정/왼쪽 앞 피부 상처 (사진2)봉합수술 진행후 회복중", ""], ["426328202600480", "부산-영도-2026-00159", "개", "푸들", "암컷", "아니오", "2021년생 (약 5살)", 3.5, "갈색", "영도구 남항로 24-4 인근", "2026-10-26", "부산동물보호센터", "051-832-7119", "2026-10-28", "미용상태 양호, 온순하고 차분함, 사람을 좋아함", ""], ["444449202601798", "충남-천안-2026-00533", "개", "믹스견", "수컷", "아니오", "2024년생 (약 2살)", 4.8, "기타(흰+크림)", "동남구 충절로 133 교보사거리", "2026-10-07", "천안시 동물보호센터", "010-5913-5119", "2026-10-28", "말티푸 추정, 순함, 활발함", "광견병,종합백신,코로나"], ["444568202600884", "충남-당진-2026-00495", "개", "믹스견", "암컷", "아니오", "2026년생", 2.0, "갈색&흰색", "당진시 송악읍 대섬길 70-8", "2026-10-14", "당진시동물보호소", "041-356-8210", "2026-10-28", "3개월, 겁이많음,코로나,종합백신2차 완료(10/28)", "종합백신,코로나"], ["447511202601181", "경북-상주-2026-00307", "개", "믹스견", "수컷", "아니오", "2023년생 (약 3살)", 22.6, "갈색&흰색", "삼포순환로 199", "2026-09-12", "상주시 동물보호센터", "010-6682-1198", "2026-10-28", "꼬리절단수술(짧음),온순함,파란목줄,모서소방서 인계받음", ""], ["426329202600793", "부산-부산진-2026-00291", "고양이", "한국 고양이", "수컷", "아니오", "2021년생 (약 5살)", 1.5, "기타(갈색)", "부산진구 동평로 94번길 28", "2026-10-26", "동물보호관리협회", "051-971-6208", "2026-10-28", "노쇠&기력소진 기립불능", ""], ["431373202601960", "울산-울주-2026-00811", "고양이", "한국 고양이", "모름", "모름", "2022년생 (약 4살)", 5.0, "평행·전체·부분줄무늬", "덕신로372", "2026-10-27", "울산유기동물보호센터", "052-238-6113", "2026-10-28", "앞다리다침 치료중 사나움", ""], ["427348202600972", "대구-달성-2026-00469", "고양이", "한국 고양이", "암컷", "아니오", "2026년생", 0.8, "흰색/검은색 얼룩무늬", "다사읍 세천로 115", "2026-10-27", "119동물병원", "070-8028-1195", "2026-10-28", "후지 마비, 기립 불능, 배변 장애, 교통사고 추정", ""], ["431372202600851", "울산-북구-2026-00430", "개", "기타", "모름", "모름", "2022년생 (약 4살)", 6.0, "흰색", "상안동544", "2026-10-27", "울산유기동물보호센터", "052-238-6113", "2026-10-28", "피부병심함,귀 상처 칩있으나 주인연락안받음", ""], ["448535202601310", "경남-김해-2026-00906", "개", "시바", "암컷", "모름", "2023년생 (약 3살)", 5.0, "기타(검갈색)", "김해시 구산로42번길 19-11", "2026-10-27", "(사)동물보호관리협회", "051-971-6208", "2026-10-28", "김해시-906, 등록번호(410100008279840)", ""], ["448535202601309", "경남-김해-2026-00905", "고양이", "한국 고양이", "모름", "모름", "2026년생", 0.2, "기타(검갈흰색)", "김해시 대동로 536", "2026-10-27", "(사)동물보호관리협회", "051-971-6208", "2026-10-28", "김해시-905, 3개월미만 추정, 어미잃은 젖먹이 새끼 고양이", ""], ["448535202601308", "경남-김해-2026-00904", "고양이", "한국 고양이", "모름", "모름", "2026년생", 0.3, "흰색/검은색 얼룩무늬", "김해시 분성로 705", "2026-10-27", "(사)동물보호관리협회", "051-971-6208", "2026-10-28", "김해시-904, 3개월미만 추정, 어미잃은 젖먹이 새끼 고양이, 눈병", ""], ["447505202600994", "경북-경주-2026-00821", "개", "믹스견", "암컷", "아니오", "2026년생", 1.7, "흰색", "사리2길 33 부근", "2026-10-15", "경주동물사랑보호센터", "010-8889-2883", "2026-10-28", "눈망울이 예쁜 여자아이에요. 피부병 치료중", ""], ["447505202600993", "경북-경주-2026-00820", "개", "믹스견", "암컷", "아니오", "2026년생", 1.4, "갈색", "사리2길 33 부근", "2026-10-15", "경주동물사랑보호센터", "010-8889-2883", "2026-10-28", "적갈색의 아래턱 흰 반점이 귀여운 강아지에요. 꼬리, 발 피부병 치료중", ""], ["413579202601675", "광주-순천-2026-00152", "개", "믹스견", "수컷", "아니오", "2024년생 (약 2살)", 11.0, "갈색&흰색", "도사초등학교", "2026-10-26", "순천시유기동물보호소", "061-749-3094", "2026-10-28", "사상충-음성, 접종(종합백신/코로나장염/광견병/데피니트/스팟라인)", "광견병,종합백신,코로나"], ["450650202602663", "제주-제주-2026-02575", "개", "믹스견", "암컷", "모름", "2026년생", 4.6, "갈색", "제주시 외도일동 761-2", "2026-10-27", "제주 동물보호센터", "064-710-4065", "2026-10-28", "개체관리번호 2031 - 3개월", ""], ["450650202602662", "제주-제주-2026-02574", "개", "믹스견", "수컷", "아니오", "2025년생 (약 1살)", 14.9, "흰색", "제주시 외도일동 761-2", "2026-10-27", "제주 동물보호센터", "064-710-4065", "2026-10-28", "개체관리번호 2030", ""], ["450650202602664", "제주-제주-2026-02576", "개", "믹스견", "암컷", "아니오", "2026년생", 4.7, "갈색", "제주시 외도일동 761-2", "2026-10-27", "제주 동물보호센터", "064-710-4065", "2026-10-28", "개체관리번호 2032 - 3개월", ""], ["450650202602666", "제주-제주-2026-02578", "개", "믹스견", "수컷", "아니오", "2026년생", 5.1, "기타(베이지)", "서귀포시 성산읍 난산온평로144", "2026-10-27", "제주 동물보호센터", "064-710-4065", "2026-10-28", "개체관리번호 2034 - 5개월", ""], ["426336202600813", "부산-강서-2026-00441", "고양이", "한국 고양이", "수컷", "아니오", "2024년생 (약 2살)", 3.0, "평행·전체·부분줄무늬", "공항로 1207", "2026-10-27", "부산동물보호센터", "051-832-7119", "2026-10-27", "뒷다리가불편함,경계심,영양상태부족,강서2-179", ""], ["443443202600711", "충북-옥천-2026-00446", "개", "코카 스파니엘", "수컷", "아니오", "2013년생 (약 13살)", 4.0, "갈색", "이원면", "2026-10-27", "옥천동물병원", "043-732-8844", "2026-10-27", "[관리번호446]이원면 의평리의 농로를 배회하던것을 발견, 피부병이 심하고 영양실조가 있음", ""], ["442431202600273", "강원-화천-2026-00053", "개", "믹스견", "암컷", "아니오", "2021년생 (약 5살)", 6.5, "흰색", "하남면 원천리 136-57", "2026-10-27", "화천군농업기술센터", "033-440-2941", "2026-10-27", "새끼와 함께 있어 예민한 상태이지만 손길을 피하지는 않음", ""], ["431371202600652", "울산-동구-2026-00322", "개", "푸들", "수컷", "아니오", "2022년생 (약 4살)", 2.6, "크림색", "이마트24 일산베스트점", "2026-10-27", "일산동물의료센터", "052-252-5878", "2026-10-27", "말랐음,잠복고환,애교많음,착함", ""], ["427514202600271", "대구-군위-2026-00257", "개", "믹스견", "암컷", "아니오", "2025년생 (약 1살)", 9.0, "검정&흰색", "부계면 대율리", "2026-10-27", "군위종합동물병원", "010-5121-3193", "2026-10-27", "순하고 착하고 사람에게 경계심이 없음, 설사 있음, 기력이 살짝 떨어짐", "광견병,종합백신"], ["428356202601493", "인천-서해-2026-00169", "기타", "기타축종", "암컷", "모름", "2024년생 (약 2살)", 2.1, "기타(검정색)", "행복 2로 30 근처 초등학교", "2026-10-26", "가정동물병원", "032-575-0833", "2026-10-27", "초등학교 인근 사거리 공사장 펜스 발견, 깜찍한 외모, 뒷발차기 장인 ,거대토끼", ""], ["443571202602038", "충북-청주-2026-00798", "개", "웰시 코기 펨브로크", "암컷", "모름", "2023년생 (약 3살)", 10.0, "검정 황갈색&흰색", "강내면 학천1길 28", "2026-09-29", "반려동물보호센터", "043-201-2298", "2026-10-27", "초록+빨강 목줄 착용, 순하고 사람을 좋아하는 아이, 10/15 출산", ""], ["443571202602049", "충북-청주-2026-00803", "개", "진도견", "암컷", "아니오", "2024년생 (약 2살)", 10.0, "흰색", "내덕동 725-43 인근", "2026-10-01", "반려동물보호센터", "043-201-2298", "2026-10-27", "연두색 하네스 착용, 순하고 귀여운 얼굴[1R7]", ""], ["428352202600534", "인천-연수-2026-00161", "고양이", "한국 고양이", "암컷", "아니오", "2026년생", 0.7, "흰색/검은색 얼룩무늬", "청학동499 요거트월드 근처", "2026-10-26", "경동동물병원", "032-765-9988", "2026-10-27", "119에서 구조하여 보호소로 인계됨", ""], ["450650202602655", "제주-제주-2026-02567", "개", "믹스견", "암컷", "아니오", "2025년생 (약 1살)", 18.5, "갈색&검정", "제주시 애월읍 애월읍 광령평화8길280", "2026-10-26", "제주 동물보호센터", "064-710-4065", "2026-10-27", "개체관리번호 2025", ""], ["427348202600970", "대구-달성-2026-00467", "개", "믹스견", "수컷", "아니오", "2026년생", 5.5, "흰색", "하빈면 기곡리 804-1", "2026-10-26", "119동물병원", "070-8028-1195", "2026-10-26", "4개월령 추정, 유순함", ""], ["427348202600969", "대구-달성-2026-00466", "개", "믹스견", "암컷", "아니오", "2026년생", 1.5, "흰색", "하빈면 하산리 639-2", "2026-10-26", "119동물병원", "070-8028-1195", "2026-10-26", "위생상태 불량, 피부, 피모 상태 안 좋음, 녹색 목줄 착용", ""], ["427348202600968", "대구-달성-2026-00465", "개", "믹스견", "암컷", "모름", "2023년생 (약 3살)", 22.0, "검정색", "화원 119  인근", "2026-10-26", "화원연합동물병원", "053-634-7975", "2026-10-26", "3세령. 등록칩 없음. 온순함.", ""], ["431372202600848", "울산-북구-2026-00427", "개", "믹스견", "모름", "아니오", "2020년생 (약 6살)", 18.0, "흰색", "북구청 당직실", "2026-10-22", "울산유기동물보호센터", "052-238-6113", "2026-10-26", "코쪽에 약간 피부병처럼 있음. 베이지색옷과 목테착용", ""], ["431373202601916", "울산-울주-2026-00802", "고양이", "브리티시 쇼트헤어", "암컷", "모름", "2024년생 (약 2살)", 2.5, "청회색", "천상길43", "2026-10-23", "울산유기동물보호센터", "052-238-6113", "2026-10-26", "엄청귀여움,얌전함,", ""], ["430364202600675", "대전-동구-2026-00190", "개", "포메라니안", "수컷", "모름", "2021년생 (약 5살)", 2.4, "하얀바탕에 한가지색 또는 두가지색의 명확한 반점", "대전광역시 동구 용운동 대암초등학교 앞", "2026-10-21", "대전동물보호센터", "042-270-7239", "2026-10-23", "황백, 빨간 방울 목걸이", ""], ["469569202600952", "세종-세종-2026-00295", "개", "믹스견", "수컷", "아니오", "2023년생 (약 3살)", 6.35, "흰색", "세종시 고운동 1556", "2026-10-12", "세종유기동물보호센터", "010-4435-3720", "2026-10-13", "아름119안전센터인계", ""], ["469569202600900", "세종-세종-2026-00290", "개", "믹스견", "암컷", "아니오", "2024년생 (약 2살)", 5.1, "흰색", "세종시 부강면 문곡리 680", "2026-10-08", "세종유기동물보호센터", "010-4435-3720", "2026-10-08", "부강119안전센터인계", ""], ["469569202600823", "세종-세종-2026-00273", "개", "비숑 프리제", "수컷", "아니오", "2023년생 (약 3살)", 6.1, "흰색", "세종시 연서면 성제리 296-14", "2026-09-28", "세종유기동물보호센터", "010-4435-3720", "2026-09-28", "연서119안전센터인계", ""], ["469569202600822", "세종-세종-2026-00272", "개", "말티즈", "수컷", "아니오", "2023년생 (약 3살)", 5.5, "크림색", "세종시 조치원읍 서창리", "2026-09-22", "세종유기동물보호센터", "010-4435-3720", "2026-09-28", "조치원119안전센터 인계", ""], ["469569202600824", "세종-세종-2026-00274", "개", "진도견", "수컷", "아니오", "2021년생 (약 5살)", 13.5, "흰색", "세종시 소정면 대곡리 447-1(소정육교)", "2026-09-28", "세종유기동물보호센터", "010-4435-3720", "2026-09-28", "소정면119지역대 인계(심장사상충양성)", ""], ["446482202600233", "전남-순천-2026-00222", "개", "믹스견", "수컷", "예", "2025년생 (약 1살)", 10.0, "흰색", "낙안부농원예사", "2026-06-18", "순천시유기동물보호소", "061-749-3094", "2026-09-19", "사상충-양성, 접종(종합백신/코로나장염/광견병/데피니트/구충제/스팟라인)", "광견병,종합백신,코로나"], ["446482202600122", "전남-순천-2026-00120", "개", "믹스견", "수컷", "예", "2025년생 (약 1살)", 12.5, "갈색", "상사면 오류고길52", "2026-04-21", "순천시유기동물보호소", "061-749-3094", "2026-09-19", "사상충-음성,접종(종합백신/코로나장염/광견병),데피니트,스팟라인", ""], ["446482202600177", "전남-순천-2026-00167", "개", "믹스견", "수컷", "아니오", "2025년생 (약 1살)", 7.8, "갈색", "구랑실재길6", "2026-05-21", "순천시유기동물보호소", "061-749-3094", "2026-09-19", "사상충-음성,접종(종합백신/코로나장염/광견병),데피니트,스팟라인", ""], ["430364202600504", "대전-동구-2026-00142", "개", "푸들", "모름", "모름", "2020년생 (약 6살)", 3.59, "쵸콜릿색", "가양동 25-10", "2026-08-26", "대전동물보호센터", "042-270-7239", "2026-08-27", "유기신고 접수(방석 사료 간식)", ""], ["430366202600435", "대전-서구-2026-00207", "개", "믹스견", "암컷", "아니오", "2026년생", 1.58, "갈색&흰색", "용촌동 22-1 인근", "2026-08-19", "대전동물보호센터", "042-270-7239", "2026-08-19", "유기 신고접수(구봉 지구대)", ""], ["430366202600433", "대전-서구-2026-00205", "개", "믹스견", "수컷", "모름", "2026년생", 1.9, "흰색", "용촌동 22-1 인근", "2026-08-19", "대전동물보호센터", "042-270-7239", "2026-08-19", "유기 신고접수(구봉 지구대)", ""], ["430366202600434", "대전-서구-2026-00206", "개", "믹스견", "수컷", "모름", "2026년생", 1.56, "갈색&흰색", "용촌동 22-1 인근", "2026-08-19", "대전동물보호센터", "042-270-7239", "2026-08-19", "유기 신고접수(구봉 지구대)", ""]];
+const SHELTER_COUNTS = {"논산시 동물보호센터": 122, "상주시 동물보호센터": 73, "당진시동물보호소": 80, "한국동물구조관리협회": 506, "대전동물보호센터": 146, "종합축산": 25, "화천군농업기술센터": 26, "세종유기동물보호센터": 78, "쉼터동물병원": 5, "익산유기동물보호소": 282, "창원동물보호센터": 98, "(사)동물보호관리협회": 41, "공주시 동물보호센터": 100, "구례군동물보호센터": 20, "화원연합동물병원": 7, "서산시 동물보호센터": 77, "강릉시 동물사랑센터": 86, "링크늘푸른동물병원": 22, "부산동물보호센터": 327, "경주동물사랑보호센터": 83, "신공항동물병원": 20, "동물보호관리협회": 19, "가정동물병원": 33, "양평군유기동물보호소": 53, "동부동물보호협회": 57, "경동동물병원": 57, "화성시민동물보호센터": 197, "울산유기동물보호센터": 224, "군위종합동물병원": 68, "천안시 동물보호센터": 110, "보성유기동물보호센터": 26, "(사)동부동물보호협회": 136, "순천시유기동물보호소": 73, "일산동물의료센터": 1, "반려동물보호센터": 214, "옥천동물병원": 30, "119동물병원": 11, "제주 동물보호센터": 198, "증평 가정견 훈련소": 14, "광주동물보호센터": 119};
+const REGIONS = ["서울","부산","대구","인천","광주","대전","울산","세종","경기","강원","충북","충남","전북","전남","경북","경남","제주"];
+const unknownBeh = () => Object.fromEntries(BEH.map(([k]) => [k, "unknown"]));
+const regionOf = a => a.region || (a.noticeNo ? a.noticeNo.split("-")[0] : "예시 지역");
+const INSIGHT = {n:"54,692", period:"2026년 4월~10월", medianLen:14, under20:70, noPers:60, life:1.0, health:10.0, sfeSoci:1.4, stale:49};
+
+/* ---------- state ---------- */
+const state = {
+  role: "home",
+  view: {name:"list"},
+  filter: "전체",
+  region: "전체",
+  shelterSel: "전체",
+  aiCache: store.get("aa_ai", {}),
+  aiLoading: null,
+  regTab: "manage",
+  added: store.get("aa_added", []),
+  overrides: store.get("aa_overrides", {}),
+  sample: null,
+  sampleReady: false,
+  draft: null
+};
+function allAnimals(){
+  const base = DEMO.map(a => ({...a, demo:true, lastChecked: daysAgoISO(a.daysChecked), status:"보호 중"}));
+  const real = REAL.map(a => ({...a, real:true, status:"보호 중"}));
+  const real2 = REAL2_ROWS.map(r => ({id:"p"+r[0], noticeNo:r[1], species:r[2], breed:r[3], sex:r[4], neutered:r[5], age:r[6], weight:r[7], color:r[8],
+    foundPlace:r[9], foundDate:r[10], shelter:r[11], tel:r[12], lastChecked:r[13], raw:r[14], memo:r[14],
+    vacc: r[15] ? "완료" : "모름", vaccDetail: r[15] ? {list: r[15].split(",").map(n => ({name:n.trim(), status:"done"})), memo:""} : null,
+    traits:[], behavior:unknownBeh(), disease:null, ai: state.aiCache["p"+r[0]] || null, real:true, raw2:true, status:"보호 중"}));
+  const list = [...state.added.map(a => ({...a})), ...real, ...real2, ...base];
+  return list.map(a => ({...a, ...(state.overrides[a.id] || {})}));
+}
+const byId = id => allAnimals().find(a => a.id === id);
+function saveOverrides(){ store.set("aa_overrides", state.overrides); }
+function saveAdded(){ store.set("aa_added", state.added); }
+
+/* ---------- derived info ---------- */
+function freshness(a){
+  if (a.status !== "보호 중") return {cls:"b-plain", label:a.status};
+  const d = daysSince(a.lastChecked);
+  if (d <= 3) return {cls:"b-fresh", label: d === 0 ? "오늘 확인" : `${d}일 전 확인`};
+  if (d <= 7) return {cls:"b-warn", label:`${d}일 전 확인`};
+  return {cls:"b-stale", label:"상태 확인 필요"};
+}
+function sizeClass(a){
+  if (a.species !== "개" || !(Number(a.weight) > 0)) return null;
+  if (a.weight < 10) return "소형견";
+  if (a.weight < 25) return "중형견";
+  return "대형견";
+}
+function sizeSense(a){
+  const w = Number(a.weight);
+  if (!w) return "";
+  let obj;
+  if (w < 1.5) obj = "500mL 생수 두세 병 정도";
+  else if (w < 3) obj = "2L 생수 한 병보다 조금 더 무거운 정도";
+  else if (w < 4.5) obj = "2L 생수 두 병 정도";
+  else if (w < 7.5) obj = "쌀 5kg 한 포대 정도";
+  else if (w < 15) obj = "쌀 10kg 한 포대 정도";
+  else if (w < 25) obj = "쌀 20kg 한 포대 정도로, 한 사람이 오래 안고 있기 힘든 무게";
+  else obj = "성인이 혼자 들기 어려운 무게";
+  const cls = sizeClass(a);
+  return `${w}kg${cls ? ` · ${cls}` : ""} — ${obj}`;
+}
+function walkMinutes(a){
+  if (a.species !== "개") return 0;
+  const cls = sizeClass(a);
+  let m = cls === "소형견" ? 30 : cls === "대형견" ? 90 : 60;
+  if ((a.traits||[]).includes("활발함")) m += 30;
+  return m;
+}
+function speciesKey(s){ return s === "개" ? "dog" : s === "고양이" ? "cat" : s === "토끼" ? "rabbit" : "etc"; }
+const PAW = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="6" cy="9" rx="2.2" ry="2.8"/><ellipse cx="10.2" cy="5.6" rx="2.2" ry="2.8"/><ellipse cx="14.6" cy="5.6" rx="2.2" ry="2.8"/><ellipse cx="18.6" cy="9.2" rx="2.2" ry="2.8"/><path d="M12.3 11.2c-3 0-6.3 4.4-6.3 7.1 0 1.9 1.5 2.7 3 2.7 1.3 0 2.2-.8 3.3-.8s2 .8 3.3.8c1.5 0 3-.8 3-2.7 0-2.7-3.3-7.1-6.3-7.1z"/></svg>';
+
+
+/* photos: uploaded to this artifact's asset store, keyed by public notice number */
+const PHOTOS = {"411300202600678": "photos/411300202600678.jpg", "411304202600367": "photos/411304202600367.jpg", "411311202600606": "photos/411311202600606.jpg", "411317202600535": "photos/411317202600535.jpg", "411322202600525": "photos/411322202600525.jpg", "413579202601675": "photos/413579202601675.jpg", "413581202600672": "photos/413581202600672.jpg", "413582202600773": "photos/413582202600773.jpg", "413585202600357": "photos/413585202600357.jpg", "426326202600467": "photos/426326202600467.jpg", "426328202600480": "photos/426328202600480.jpg", "426329202600793": "photos/426329202600793.jpg", "426330202600418": "photos/426330202600418.jpg", "426334202600975": "photos/426334202600975.jpg", "426335202600719": "photos/426335202600719.jpg", "426336202600813": "photos/426336202600813.jpg", "427348202600968": "photos/427348202600968.jpg", "427348202600969": "photos/427348202600969.jpg", "427348202600970": "photos/427348202600970.jpg", "427348202600972": "photos/427348202600972.jpg", "427514202600271": "photos/427514202600271.jpg", "428349202600788": "photos/428349202600788.jpg", "428350202600563": "photos/428350202600563.jpg", "428352202600534": "photos/428352202600534.jpg", "428353202600283": "photos/428353202600283.jpg", "428356202601482": "photos/428356202601482.jpg", "428356202601493": "photos/428356202601493.jpg", "430364202600504": "photos/430364202600504.jpg", "430364202600675": "photos/430364202600675.jpg", "430366202600433": "photos/430366202600433.jpg", "430366202600434": "photos/430366202600434.jpg", "430366202600435": "photos/430366202600435.jpg", "431371202600652": "photos/431371202600652.jpg", "431372202600848": "photos/431372202600848.jpg", "431372202600851": "photos/431372202600851.jpg", "431373202601916": "photos/431373202601916.jpg", "431373202601960": "photos/431373202601960.jpg", "441393202600431": "photos/441393202600431.jpg", "441406202601332": "photos/441406202601332.jpg", "441417202600818": "photos/441417202600818.jpg", "441417202601082": "photos/441417202601082.jpg", "441417202601189": "photos/441417202601189.jpg", "441417202601391": "photos/441417202601391.jpg", "441553202603057": "photos/441553202603057.jpg", "441554202600834": "photos/441554202600834.jpg", "442419202600215": "photos/442419202600215.jpg", "442420202600102": "photos/442420202600102.jpg", "442420202600497": "photos/442420202600497.jpg", "442420202600557": "photos/442420202600557.jpg", "442420202600558": "photos/442420202600558.jpg", "442431202600273": "photos/442431202600273.jpg", "443443202600711": "photos/443443202600711.jpg", "443445202600668": "photos/443445202600668.jpg", "443571202602038": "photos/443571202602038.jpg", "443571202602049": "photos/443571202602049.jpg", "443571202602417": "photos/443571202602417.jpg", "444449202601798": "photos/444449202601798.jpg", "444449202601838": "photos/444449202601838.jpg", "444450202600907": "photos/444450202600907.jpg", "444453202601169": "photos/444453202601169.jpg", "444454202601169": "photos/444454202601169.jpg", "444568202600884": "photos/444568202600884.jpg", "445464202602621": "photos/445464202602621.jpg", "445468202602896": "photos/445468202602896.jpg", "445468202602901": "photos/445468202602901.jpg", "445468202602920": "photos/445468202602920.jpg", "445468202602921": "photos/445468202602921.jpg", "445468202602922": "photos/445468202602922.jpg", "445468202602923": "photos/445468202602923.jpg", "445468202602924": "photos/445468202602924.jpg", "445475202600019": "photos/445475202600019.jpg", "446481202600662": "photos/446481202600662.jpg", "446482202600122": "photos/446482202600122.jpg", "446482202600177": "photos/446482202600177.jpg", "446482202600233": "photos/446482202600233.jpg", "446487202600108": "photos/446487202600108.jpg", "447505202600993": "photos/447505202600993.jpg", "447505202600994": "photos/447505202600994.jpg", "447505202601032": "photos/447505202601032.jpg", "447511202601181": "photos/447511202601181.jpg", "447512202600668": "photos/447512202600668.jpg", "448535202601308": "photos/448535202601308.jpg", "448535202601309": "photos/448535202601309.jpg", "448535202601310": "photos/448535202601310.jpg", "448567202601129": "photos/448567202601129.jpg", "448567202601413": "photos/448567202601413.jpg", "450650202602655": "photos/450650202602655.jpg", "450650202602662": "photos/450650202602662.jpg", "450650202602663": "photos/450650202602663.jpg", "450650202602664": "photos/450650202602664.jpg", "450650202602666": "photos/450650202602666.jpg", "469569202600822": "photos/469569202600822.jpg", "469569202600823": "photos/469569202600823.jpg", "469569202600824": "photos/469569202600824.jpg", "469569202600900": "photos/469569202600900.jpg", "469569202600952": "photos/469569202600952.jpg"};
+const REAL_DNO = {r1:"441553202603057", r2:"444449202601838", r3:"426326202600467", r4:"445468202602896", r5:"445468202602901", r6:"445464202602621", r7:"426334202600975"};
+const DEMO_PHOTO = {d1:"442419202600215", d2:"428353202600283", d3:"441393202600431", d4:"441554202600834", d6:"445475202600019"};
+function photoOf(a){
+  const k = a.id.startsWith("p") ? a.id.slice(1) : (REAL_DNO[a.id] || DEMO_PHOTO[a.id]);
+  return k && PHOTOS[k] ? PHOTOS[k] : null;
+}
+function thumbHTML(a){
+  const ph = photoOf(a);
+  return `<div class="thumb t-${speciesKey(a.species)}">${ph ? `<img src="${ph}" alt="" loading="lazy">` : PAW}</div>`;
+}
+/* ---------- fallback (no AI) care text ---------- */
+function baseCare(a){
+  const out = [];
+  const cls = sizeClass(a);
+  if (a.species === "개"){
+    out.push({topic:"주거 환경", text: cls === "대형견" ? "대형견이라 넓은 실내 공간이나 마당이 있는 집이 좋아요." : cls === "중형견" ? "중형견이라 아파트에서도 지낼 수 있지만, 짖음과 활동 공간을 고려하세요." : "소형견이라 원룸·아파트 모두 가능해요. 미끄럼 방지 바닥을 권장해요.", basis:"일반 권고"});
+    out.push({topic:"산책·활동", text:`하루 2회, 합계 약 ${walkMinutes(a)}분의 산책을 권장해요.`, basis:"일반 권고"});
+  } else if (a.species === "고양이"){
+    out.push({topic:"주거 환경", text:"높은 공간(캣타워)과 숨을 곳, 방묘창 설치를 권장해요.", basis:"일반 권고"});
+    out.push({topic:"놀이·활동", text:"하루 2~3회, 10~15분씩 사냥 놀이를 권장해요.", basis:"일반 권고"});
+  } else {
+    out.push({topic:"주거 환경", text:"안전하게 돌아다닐 공간과 종에 맞는 사육 환경이 필요해요.", basis:"일반 권고"});
+  }
+  return out;
+}
+
+/* ---------- self-check rules ---------- */
+function ruleCheck(a, ans){
+  const good=[], adjust=[], re=[], qs=["지금도 보호소에서 보호 중인가요?"];
+  const b = a.behavior || {};
+  const ask = (k, q) => { if ((b[k]||"unknown") === "unknown") qs.push(q); };
+  if (a.species === "개"){
+    const need = walkMinutes(a);
+    const have = ans.walk === "30분 미만" ? 20 : ans.walk === "30분~1시간" ? 45 : 90;
+    if (have >= need) good.push(`권장 산책 시간(하루 약 ${need}분)을 채울 수 있어요.`);
+    else if (need - have >= 40) re.push(`권장 산책 시간(하루 약 ${need}분)보다 산책 가능 시간이 많이 짧아요.`);
+    else adjust.push(`권장 산책 시간(하루 약 ${need}분)보다 조금 짧아요. 주말 산책이나 놀이로 보완할 수 있는지 생각해 보세요.`);
+    const cls = sizeClass(a);
+    if (ans.home === "원룸·오피스텔" && cls === "대형견") re.push("대형견에게 원룸은 활동 공간이 좁을 수 있어요.");
+    else if (ans.home === "원룸·오피스텔" && cls === "중형견") adjust.push("중형견이라 원룸이라면 산책과 활동량을 더 챙겨야 해요.");
+    else good.push("주거 형태가 이 아이의 크기에 무리가 없어요.");
+    if (ans.home !== "마당 있는 집" && b.bark === "hard") adjust.push("짖음이 많은 편이라 공동주택이라면 이웃 소음을 고려해야 해요.");
+  } else {
+    good.push(a.species === "고양이" ? "고양이는 주거 형태의 제약이 적은 편이에요. 방묘창 설치는 꼭 확인하세요." : "주거 공간에 안전한 활동 구역을 만들 수 있는지 확인하세요.");
+  }
+  const alone = b.alone || "unknown";
+  const long = ans.alone === "8시간 이상", mid = ans.alone === "4~8시간";
+  if (alone === "hard" && (long || mid)) re.push("혼자 있는 걸 힘들어하는 아이인데 혼자 있는 시간이 긴 편이에요.");
+  else if (alone === "hard") adjust.push("혼자 있는 걸 힘들어해요. 처음 몇 주는 함께 있는 시간을 늘려 주세요.");
+  else if (alone === "unknown" && (long || mid)) { adjust.push("혼자 있을 때 반응이 공고에 없어요. 혼자 있는 시간이 긴 편이라 꼭 확인이 필요해요."); }
+  else if (alone !== "unknown") good.push("혼자 있는 시간에 대한 걱정이 크지 않아요.");
+  ask("alone","혼자 있을 때 짖거나 불안해하나요?");
+  const pet = ans.pets;
+  if (pet === "개" || pet === "고양이"){
+    const k = pet === "개" ? "dogs" : "cats";
+    const v = b[k] || "unknown";
+    if (v === "hard") re.push(`${pet}와(과) 지내는 걸 어려워해요. 지금 함께 사는 ${pet}가 있다면 신중해야 해요.`);
+    else if (v === "unknown") { adjust.push(`${pet}와(과)의 관계가 공고에 없어요.`); qs.push(`${pet}와(과) 함께 지내 본 적이 있나요? 반응은 어땠나요?`); }
+    else good.push(`${pet}와(과) 지내는 모습이 '${BEH_VAL[v]}'으로 관찰됐어요.`);
+  }
+  if (ans.kids !== "없음"){
+    const v = b.kids || "unknown";
+    if (v === "hard") re.push("아이와 지내는 걸 어려워하는 모습이 관찰됐어요.");
+    else if (v === "unknown") { adjust.push("아이와의 관계가 공고에 없어요. 입양 전 아이와 함께 만나 보는 걸 권해요."); qs.push("아이와 만났을 때 반응은 어땠나요?"); }
+    else good.push(`아이와의 관계가 '${BEH_VAL[v]}'으로 관찰됐어요.`);
+  }
+  if (ans.exp === "없음"){
+    const hardCount = Object.values(b).filter(v => v === "hard").length;
+    if (hardCount >= 2 || (a.disease && a.disease.status !== "완치")) adjust.push("처음 키우는 분이라면 행동 교육이나 질병 관리 방법을 미리 배워 두세요.");
+    else good.push("처음 키우는 분도 시작하기에 무리가 크지 않아 보여요.");
+  }
+  if (a.disease && a.disease.status !== "완치"){
+    if (ans.budget === "월 10만 원 미만") re.push(`${a.disease.name} ${a.disease.status} 중이라 치료·관리 비용이 예산보다 클 수 있어요.`);
+    else adjust.push(`${a.disease.name} ${a.disease.status} 중이에요. 남은 치료 기간과 비용을 확인하세요.`);
+    qs.push(`${a.disease.name} 치료는 어느 단계이고, 앞으로 어떤 관리가 필요한가요?`);
+  }
+  if (ans.allergy === "있음") re.push("가족 중 알레르기가 있으면 입양 후 함께 살기 어려워질 수 있어요. 입양 전에 직접 만나 확인하세요.");
+  else if (ans.allergy === "모름") adjust.push("동물 알레르기가 있는지 모른다면, 입양 전 직접 만나 확인해 보세요.");
+  ask("toilet","배변은 어디서, 얼마나 잘 가리나요?");
+  const verdict = re.length ? "re" : adjust.length ? "adjust" : "good";
+  return {verdict, good, adjust, reconsider:re, questions:[...new Set(qs)].slice(0,6)};
+}
+const VERDICT = {good:["잘 맞는 편이에요","v-good"], adjust:["맞춰갈 점이 있어요","v-adjust"], re:["신중히 다시 생각해 보세요","v-re"]};
+
+/* ---------- AI ---------- */
+// 서버리스 함수(/api/ai)를 거쳐 Claude API를 부른다. API 키는 서버에만 있다.
+function makeAI(){
+  const CK = "ipyang-ai-cache";
+  const hash = s => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return String(h); };
+  const fail = code => Object.assign(new Error(code), {code});
+  return {
+    async json(prompt, opts = {}){
+      const key = hash(prompt), cache = store.get(CK, {});
+      if (opts.cache !== false && cache[key]) return cache[key];
+      let r;
+      try { r = await fetch("/api/ai", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({prompt}), signal: opts.signal}); }
+      catch(e){ if (e.name === "AbortError") throw e; throw fail("network"); }
+      if (r.status === 429) throw fail("rate_limited");
+      if (r.status === 402) throw fail("budget");
+      if (!r.ok) throw fail("server");
+      const {text} = await r.json();
+      const m = String(text || "").match(/\{[\s\S]*\}/);
+      let out; try { out = JSON.parse(m ? m[0] : text); } catch(e){ throw fail("invalid_json"); }
+      const keys = Object.keys(cache); if (keys.length > 60) delete cache[keys[0]];
+      cache[key] = out; store.set(CK, cache);
+      return out;
+    }
+  };
+}
+(async () => {
+  // 서버(/api/ai)가 살아 있고 API 키가 설정돼 있을 때만 AI를 켠다.
+  try {
+    const r = await fetch("/api/ai", {method:"GET"});
+    const s = r.ok ? await r.json() : null;
+    state.sample = s && s.ready ? makeAI() : null;
+  } catch(e){ state.sample = null; }
+  state.sampleReady = true;
+  render();
+})();
+function aiErrorText(e){
+  const c = e && e.code;
+  if (c === "not_granted" || c === "sampling_disabled" || c === "capability_disabled" || c === "not_declared") { state.sample = null; return "지금은 AI를 쓸 수 없어요. AI 없이 만든 기본 결과를 보여드릴게요."; }
+  if (c === "rate_limited") return "AI 요청이 많아요. 잠시 후 다시 눌러 주세요.";
+  if (c === "invalid_json") return "AI 답변 형식이 맞지 않았어요. 다시 눌러 주세요.";
+  if (c === "budget") return "AI 사용 한도에 도달했어요. 나중에 다시 시도해 주세요.";
+  return "AI 응답을 받지 못했어요. 다시 눌러 주세요.";
+}
+function noticePrompt(a){
+  const b = Object.fromEntries(BEH.filter(([k]) => a.species === "개" || k !== "walk").map(([k,l]) => [l, BEH_VAL[(a.behavior||{})[k]||"unknown"]]));
+  const input = {
+    종: a.species, 품종: a.breed, 성별: a.sex, 중성화: a.neutered, 나이: a.age, 체중kg: a.weight, 색: a.color,
+    접종: a.vacc, 접종내역: vaccSummary(a) || "(입력 없음)", 크기분류: sizeClass(a) || "해당 없음", 성격키워드: a.traits, 행동관찰: b, 관찰메모: a.memo || "(없음)",
+    질병: a.disease ? `${a.disease.name} (${a.disease.status})` : "없음", 보호소: a.shelter
+  };
+  return `너는 유기동물 보호소의 입양 공고 작성을 돕는다. 아래 입력만 근거로 공고를 쓴다.
+
+규칙:
+1. 입력에 없는 성격, 행동, 건강 사실을 절대 만들지 않는다. 모르는 항목은 missing에 넣는다.
+2. care 항목은 종, 품종, 크기, 성격 키워드를 바탕으로 입양자에게 권고할 조건(주거 환경, 산책·활동, 추천 보호자 경험, 다른 동물·아이)을 쓴다. 관찰 내용이 근거면 basis를 "보호자 관찰", 종·품종·크기에 따른 일반론이면 "일반 권고"로 쓴다. 행동관찰이 "모름"인 항목을 근거로 단정하지 않는다.
+3. 질병이 있으면 health_note에 질병명과 치료 상태를 쉬운 말로 1~2문장 쓴다. 치사율이나 예후를 숫자로 쓰지 않는다. 질병이 없으면 빈 문자열.
+4. questions는 입양 희망자가 보호소에 전화할 때 물어볼 질문 3~5개. 첫 질문은 반드시 "지금도 보호소에서 보호 중인가요?" 접종이 진행 중이거나 내역이 없으면 남은 접종 일정을 묻는 질문을 넣는다.
+6. care의 topic은 "주거 환경", "산책·활동"(고양이·토끼는 "놀이·활동"), "다른 동물·아이", "추천 보호자 경험" 중에서 쓴다.
+5. 문체는 따뜻하지만 과장 없는 해요체. headline은 30자 이내.
+
+입력:
+${JSON.stringify(input, null, 1)}
+
+JSON만 답한다. 형식:
+{"headline":"","summary":"2~3문장","personality":[{"trait":"","evidence":"보호자 관찰: ..."}],"care":[{"topic":"","text":"","basis":"일반 권고"}],"health_note":"","missing":[""],"questions":[""]}`;
+}
+function checkPrompt(a, ans){
+  return `너는 유기동물 입양 희망자의 자가 체크를 돕는다. 아래 공고 정보와 입양 희망자의 생활 조건을 비교한다.
+
+규칙:
+1. 공고에 없는 동물 정보는 추측하지 않고 "확인 필요"로 다룬다.
+2. good(잘 맞는 점), adjust(맞춰갈 점), reconsider(다시 생각해 볼 점)를 각각 0~4개, 한 문장씩 쓴다.
+3. 입양을 무조건 권하거나 막지 말고, 파양을 줄이는 관점에서 솔직하게 쓴다.
+4. questions는 보호소에 물어볼 질문 3~5개, 첫 질문은 "지금도 보호소에서 보호 중인가요?"
+5. verdict는 "good","adjust","re" 중 하나. 해요체.
+
+공고:
+${JSON.stringify({종:a.species,품종:a.breed,나이:a.age,체중kg:a.weight,크기:sizeClass(a),성격:a.traits,행동관찰:Object.fromEntries(Object.entries(a.behavior||{}).map(([k,v])=>[BEH.find(x=>x[0]===k)?.[1]||k,BEH_VAL[v]])),메모:a.memo,질병:a.disease?`${a.disease.name} (${a.disease.status})`:"없음",권장산책분:walkMinutes(a)||"해당 없음"}, null, 1)}
+
+입양 희망자:
+${JSON.stringify(ans, null, 1)}
+
+JSON만 답한다. 형식: {"verdict":"adjust","good":[""],"adjust":[""],"reconsider":[""],"questions":[""]}`;
+}
+
+/* ---------- render ---------- */
+function homeHTML(){
+  const reg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>';
+  return `<div class="home">
+    <div class="logo"><div class="mark">${PAW}</div><h1>입양하개</h1><p class="tag">내 반려동물을 만나러 가기 전에 자세한 공고로 미리 확인해요</p></div>
+    <div class="choices">
+      <button class="choice" data-role="adopter"><div class="ic t-dog">${PAW}</div><div><b>입양 희망자</b><span class="d">공고 찾기 · AI 정리 · 자가 체크</span></div><span class="arr" aria-hidden="true">›</span></button>
+      <button class="choice" data-role="reg"><div class="ic t-cat" style="color:var(--blue)">${reg}</div><div><b>공고 등록자</b><span class="d">AI 공고 작성 · 공고 관리</span></div><span class="arr" aria-hidden="true">›</span></button>
+    </div>
+    <p class="foot">시연용 프로토타입</p>
+  </div>`;
+}
+function setRole(r){
+  state.role = r;
+  if (r !== "adopter") state.view = {name:"list"};
+  render(); window.scrollTo(0, 0);
+}
+function render(){
+  const app = $("#app");
+  $("header.top").hidden = state.role === "home";
+  $("#role-label").textContent = state.role === "reg" ? "공고 등록자" : "입양 희망자";
+  if (state.role === "home"){
+    app.innerHTML = homeHTML();
+    document.querySelectorAll("[data-role]").forEach(b => b.onclick = () => setRole(b.dataset.role));
+    return;
+  }
+  if (state.role === "adopter"){
+    app.innerHTML = state.view.name === "detail" ? detailHTML(byId(state.view.id)) : listHTML();
+  } else {
+    app.innerHTML = regHTML();
+  }
+  bind();
+}
+function shelterCount(name, all){
+  if (SHELTER_COUNTS[name] != null) return {n: SHELTER_COUNTS[name], pub:true};
+  return {n: all.filter(a => a.shelter === name && a.status === "보호 중").length, pub:false};
+}
+function regionFilterHTML(all){
+  const regions = [...new Set(all.map(regionOf))].sort((a, b) => (REGIONS.indexOf(a) + 1 || 99) - (REGIONS.indexOf(b) + 1 || 99));
+  const inRegion = all.filter(a => state.region === "전체" || regionOf(a) === state.region);
+  const shelters = [...new Set(inRegion.map(a => a.shelter))].sort();
+  const sel = state.shelterSel;
+  let summary = "";
+  if (sel !== "전체"){
+    const c = shelterCount(sel, all), shown = all.filter(a => a.shelter === sel), tel = shown[0]?.tel || "";
+    summary = `<div class="panel soft" style="gap:6px"><div class="row" style="justify-content:space-between"><b>${esc(sel)}</b><span class="badge b-info">보호 중 ${c.n}마리</span></div>
+      <span class="small muted">${c.pub ? "2026-10-27 공공데이터 기준 이 보호소의 보호 중 공고 수예요. 이 앱에는 그중 " + shown.length + "건이 보여요." : "이 앱에 등록된 보호 중 공고 수예요."}</span>
+      ${tel ? `<span class="small">연락처 ${esc(tel)}</span>` : ""}</div>`;
+  } else if (state.region !== "전체"){
+    summary = `<p class="small muted" style="margin:0">${esc(state.region)} 지역 보호소 ${shelters.length}곳의 공고를 보고 있어요. 보호소를 고르면 보호 중인 동물 수를 볼 수 있어요.</p>`;
+  }
+  return `<div class="panel" style="gap:10px"><div class="grid2">
+      <label class="f">지역<select id="sel-region"><option value="전체">전체 지역</option>${regions.map(r => `<option value="${esc(r)}"${r===state.region?" selected":""}>${esc(r)} (${all.filter(a => regionOf(a) === r).length})</option>`).join("")}</select></label>
+      <label class="f">보호소<select id="sel-shelter"><option value="전체">전체 보호소</option>${shelters.map(s => `<option value="${esc(s)}"${s===sel?" selected":""}>${esc(s)} · 보호 중 ${shelterCount(s, all).n}마리</option>`).join("")}</select></label>
+    </div>${summary}</div>`;
+}
+function listHTML(){
+  const f = state.filter;
+  const all = allAnimals();
+  const items = all.filter(a => (f === "전체" || (f === "기타" ? !["개","고양이"].includes(a.species) : a.species === f))
+    && (state.region === "전체" || regionOf(a) === state.region)
+    && (state.shelterSel === "전체" || a.shelter === state.shelterSel));
+  return `<div class="stack">
+    <details class="disease" id="insight"><summary>데이터로 본 입양 공고의 현실</summary><div class="dis-body">
+      <p style="margin:0" class="small">전국 구조동물 공고 <b>${INSIGHT.n}건</b>(${INSIGHT.period})을 분석했어요.</p>
+      <ul class="list small">
+        <li>공고의 특징 메모는 공백을 빼면 중간값이 <b>${INSIGHT.medianLen}자</b>이고, <b>${INSIGHT.under20}%</b>가 20자 이하예요.</li>
+        <li>성격 정보가 전혀 없는 공고가 <b>${INSIGHT.noPers}%</b>, 배변·산책·혼자 있기 같은 생활 습관 정보가 있는 공고는 <b>${INSIGHT.life}%</b>뿐이에요.</li>
+        <li>시스템에 건강검진 항목이 있지만 채워진 공고는 <b>${INSIGHT.health}%</b>, 사회성 항목은 <b>${INSIGHT.sfeSoci}%</b>예요.</li>
+        <li>수집 시점에 보호 중인 공고의 <b>${INSIGHT.stale}%</b>는 30일 넘게 정보가 수정되지 않았어요.</li>
+      </ul>
+      <p class="muted small" style="margin:0">출처: 농림축산검역본부 국가동물보호정보시스템 구조동물 조회 서비스(공공데이터포털), 2026-10-27 수집</p></div></details>
+    <p class="note">'실제 공고'는 공공데이터(2026-10-27 수집)의 보호 중 공고예요. 'AI 정리 전' 공고는 상세 화면에서 AI로 정리할 수 있어요. '예시'는 기능 시연용 가상 공고예요. 보호 상태는 수집일 기준이니 꼭 전화로 확인하세요.</p>
+    <div class="row" style="justify-content:space-between"><h2>입양을 기다려요</h2><span class="small">${items.length}마리</span></div>
+    <div class="chips" role="group" aria-label="종 필터">${["전체","개","고양이","기타"].map(c => `<button class="chip" data-filter="${c}" aria-pressed="${c===f}">${c}</button>`).join("")}</div>
+    ${regionFilterHTML(all)}
+    ${items.map(cardHTML).join("") || `<p class="empty">조건에 맞는 공고가 없어요.</p>`}
+  </div>`;
+}
+function cardHTML(a){
+  const fr = freshness(a);
+  const head = a.ai?.headline || (a.raw2 ? (a.raw.length > 40 ? a.raw.slice(0, 40) + "…" : a.raw) : `${a.breed} · ${a.age}`);
+  return `<button class="card" data-open="${a.id}">
+    ${thumbHTML(a)}
+    <div class="meta">
+      <div class="head"><span class="name">${esc(a.breed)} <span class="muted small">${esc(a.sex)} · ${esc(a.age)}</span></span><span class="badge ${fr.cls}">${esc(fr.label)}</span></div>
+      <div class="row" style="gap:6px"><span class="badge ${a.real?"b-info":"b-plain"}">${a.real?"실제 공고":a.demo?"예시":"내가 등록"}</span>${a.raw2 && !a.ai ? `<span class="badge b-plain">AI 정리 전</span>` : ""}<span class="small muted">${esc(regionOf(a))}</span></div>
+      <div>${esc(head)}</div>
+      <div class="line">${esc(a.weight)}kg${sizeClass(a)?` · ${sizeClass(a)}`:""} · ${esc(a.shelter)}${a.disease?` · <span style="color:var(--amber)">${esc(a.disease.name)}</span>`:""}</div>
+    </div></button>`;
+}
+function aiBlocks(a, ai, basic){
+  ai = ai || {headline:"", summary:"", personality:[], care:baseCare(a), health_note:"", missing:[], questions:["지금도 보호소에서 보호 중인가요?"]};
+  if (basic) {
+    const careB = (ai.care||[]).map(c => `<div class="care-item"><div class="row"><h3>${esc(c.topic)}</h3><span class="badge b-info">${esc(c.basis)}</span></div><div>${esc(c.text)}</div></div>`).join("");
+    return `<p class="small" style="margin:0"><b>기본 정리</b> · AI 없이 종·크기 정보로 만든 일반 안내예요. 성격과 생활 습관은 원래 문구를 직접 확인하세요.</p>
+      <div class="panel"><h3>입양자에게 권하는 조건</h3><div class="care">${careB}</div></div>
+      <div class="panel"><h3>입양 전에 확인할 정보 <span class="badge b-warn">확인 필요</span></h3><ul class="list missing">${(ai.missing||[]).map(m => `<li><span>${esc(m)}</span></li>`).join("")}</ul></div>
+      <div class="panel"><h3>보호소에 물어볼 질문</h3><ol class="qlist">${(ai.questions||[]).map(q => `<li>${esc(q)}</li>`).join("")}</ol></div>`;
+  }
+  const per = (ai.personality||[]).length ? `<ul class="list">${ai.personality.map(p => `<li><b>${esc(p.trait)}</b><br><span class="muted small">${esc(p.evidence)}</span></li>`).join("")}</ul>` : `<p class="muted small">공고에 성격 관찰 정보가 없어요.</p>`;
+  const careOrder = c => /추천 보호자/.test(c.topic||"") ? 2 : c.basis === "보호자 관찰" ? 0 : 1;
+  const care = [...(ai.care||[])].sort((x, y) => careOrder(x) - careOrder(y)).map(c => `<div class="care-item"><div class="row"><h3>${esc(c.topic)}</h3><span class="badge ${c.basis==="보호자 관찰"?"b-fresh":"b-info"}">${esc(c.basis)}</span></div><div>${esc(c.text)}</div></div>`).join("");
+  const missing = (ai.missing||[]).length ? `<div class="panel"><h3>공고에 없는 정보 <span class="badge b-warn">확인 필요</span></h3><ul class="list missing">${ai.missing.map(m => `<li><span>${esc(m)}</span></li>`).join("")}</ul></div>` : "";
+  return `${ai.summary ? `<div class="panel"><h3>소개</h3><p style="margin:0">${esc(ai.summary)}</p></div>` : ""}
+    <div class="panel"><h3>성격</h3>${per}</div>
+    <div class="panel"><h3>입양자에게 권하는 조건</h3>
+      <p class="muted small" style="margin:0"><span class="badge b-fresh">보호자 관찰</span> 실제 관찰 내용 &nbsp; <span class="badge b-info">일반 권고</span> 종·품종·크기 기준 일반론</p>
+      <div class="care">${care}</div></div>
+    ${missing}
+    <div class="panel"><h3>보호소에 물어볼 질문</h3><ol class="qlist">${(ai.questions||[]).map(q => `<li>${esc(q)}</li>`).join("")}</ol></div>`;
+}
+function diseaseHTML(a){
+  if (!a.disease) return "";
+  const d = DISEASES[a.disease.name];
+  const statusBadge = `<span class="badge ${a.disease.status==="완치"?"b-fresh":a.disease.status==="치료 중"?"b-stale":"b-warn"}">${esc(a.disease.status)}</span>`;
+  const body = d ? `<div class="dis-body">
+      <div class="f"><span>한 줄 설명</span>${esc(d.one)}</div>
+      <div class="f"><span>주요 증상</span>${esc(d.symptoms)}</div>
+      <div class="f"><span>전염성</span>${esc(d.contagion)}</div>
+      <div class="f"><span>심각도</span>${esc(d.severity)}</div>
+      <div class="f"><span>치료</span>${esc(d.treat)}</div>
+      <div class="f"><span>예후</span>${esc(d.prognosis)}</div>
+      <div class="f"><span>입양 전 확인할 것</span>${esc(d.check)}</div>
+      <p class="muted small" style="margin:0">${DISEASE_NOTE}</p></div>`
+    : `<div class="dis-body"><p style="margin:0">이 질병은 등록된 안내 카드가 없어요. 증상, 치료 계획, 예후를 보호소와 담당 수의사에게 직접 확인하세요.</p></div>`;
+  return `<div class="panel"><div class="row" style="justify-content:space-between"><h3>건강 상태</h3>${statusBadge}</div>
+    ${a.ai?.health_note ? `<p style="margin:0">${esc(a.ai.health_note)}</p>` : ""}
+    <details class="disease"><summary>${esc(a.disease.name)} 안내 보기</summary>${body}</details></div>`;
+}
+function detailHTML(a){
+  if (!a) return `<p class="empty">공고를 찾을 수 없어요.</p>`;
+  const fr = freshness(a);
+  const d = daysSince(a.lastChecked);
+  const freshMsg = a.status !== "보호 중" ? `이 공고는 '${esc(a.status)}' 상태예요.`
+    : a.real ? (fr.cls === "b-stale" ? `공고 정보가 ${d}일째 수정되지 않았어요. 다른 보호소로 옮겨졌거나 입양됐을 수 있으니 전화로 먼저 확인하세요.` : `공고 정보가 ${d === 0 ? "오늘" : d + "일 전"} 마지막으로 수정됐어요.`)
+    : fr.cls === "b-stale" ? `보호소가 ${d}일째 상태를 확인하지 않았어요. 다른 보호소로 옮겨졌거나 입양됐을 수 있으니 전화로 먼저 확인하세요.` : `보호소가 ${d === 0 ? "오늘" : d + "일 전"} 보호 중임을 확인했어요.`;
+  return `<div class="stack">
+    <button class="back" data-back>← 목록으로</button>
+    ${photoOf(a) ? `<figure style="margin:0;display:flex;flex-direction:column;gap:4px"><img class="hero-photo" src="${photoOf(a)}" alt="${esc(a.breed)} 사진"><figcaption class="photo-cap">${a.demo ? "예시 사진이에요. 이 가상 공고의 실제 동물이 아니에요." : "공공데이터 공고에 등록된 사진이에요."}</figcaption></figure>` : ""}
+    <div class="row">${photoOf(a) ? "" : thumbHTML(a)}
+      <div style="min-width:0;flex:1"><h2>${esc(a.ai?.headline || a.breed)}</h2><div class="muted small">공고 ${esc(a.noticeNo || a.id.toUpperCase())} · ${esc(a.shelter)}</div></div></div>
+    <div class="panel ${fr.cls==="b-stale"?"":"soft"}" style="${fr.cls==="b-stale"?"border-color:var(--red)":""}"><div class="row"><span class="badge ${fr.cls}">${esc(fr.label)}</span><span class="small">${freshMsg}</span></div></div>
+    <div class="panel">
+      <div class="kv">
+        <div><span>종 · 품종</span><b>${esc(a.species)} · ${esc(a.breed)}</b></div>
+        <div><span>성별 · 중성화</span><b>${esc(a.sex)} · ${esc(a.neutered)}</b></div>
+        <div><span>나이</span><b>${esc(a.age)}</b></div>
+        <div><span>접종</span><b>${esc(a.vacc)}</b></div>
+        ${vaccSummary(a) ? `<div style="grid-column:1/-1"><span>접종 내역</span><b>${esc(vaccSummary(a))}</b></div>` : ""}
+        <div><span>발견 장소</span><b>${esc(a.foundPlace)}</b></div>
+        <div><span>발견일</span><b>${esc(a.foundDate)}</b></div>
+      </div>
+      ${a.raw2 && !a.ai ? "" : `<div class="size-sense"><span aria-hidden="true">⚖</span><span><b>크기 감각</b> ${esc(sizeSense(a))}</span></div>`}
+    </div>
+    ${a.raw2 && !a.ai ? `<div class="panel" style="border:2px solid var(--accent)"><div class="row" style="justify-content:space-between"><b>아직 AI로 정리하지 않은 공고예요</b><span class="badge b-plain">원문</span></div>
+      <div class="raw">${esc(a.raw || "(없음)")}</div>
+      ${state.aiLoading === a.id ? `<div class="thinking"><span class="dot"></span>AI가 공고를 정리하고 있어요. 보통 10~40초 걸려요.</div>`
+        : state.sample ? `${state.aiError?.id === a.id ? `<p class="err" style="margin:0">${esc(state.aiError.msg)}</p>` : `<span class="small muted">공공데이터에 실린 특징 메모 원문이에요. AI로 정리하면 성격, 권하는 조건, 확인할 정보가 정리돼요.</span>`}<button class="btn primary" data-ai-improve="${a.id}">AI로 정리하기</button>`
+        : `<span class="small muted">공공데이터에 실린 특징 메모 원문이에요. 이 화면에서는 AI를 쓸 수 없어요.</span>`}</div>
+      <p class="small" style="margin:0">AI로 정리하면 성격, 권하는 조건, 크기 감각, 확인할 정보, 보호소 질문, 입양 전 자가 체크가 나타나요.</p>`
+    : aiBlocks(a, a.ai)}
+    ${diseaseHTML(a)}
+    ${a.raw2 && !a.ai ? "" : `<details class="disease"${a.real?" open":""}><summary>원래 공고 문구 보기</summary><div class="dis-body"><div class="raw">${esc(a.raw || "(없음)")}</div><p class="muted small" style="margin:0">${a.real ? "공공데이터에 실린 실제 특징 메모예요. 위 소개와 권고 조건은 이 문구만을 근거로 AI가 정리했고, 문구에 없는 내용은 '확인 필요'로 남겼어요." : "위 소개와 권고 조건은 이 문구와 보호자 관찰 기록을 바탕으로 AI가 정리했어요."}</p></div></details>`}
+    ${a.raw2 && !a.ai ? "" : selfCheckHTML(a)}
+    <div class="panel"><h3>보호소 연락처</h3><div class="tel"><span>${esc(a.shelter)}</span><code id="tel">${esc(a.tel)}</code><button class="btn" data-copy="${esc(a.tel)}">번호 복사</button></div></div>
+  </div>`;
+}
+function selfCheckHTML(a){
+  const sc = state.view.check;
+  const opts = (name, list, val) => `<label class="f">${name.label}<select id="sc-${name.key}">${list.map(o => `<option${o===val?" selected":""}>${o}</option>`).join("")}</select></label>`;
+  const ans = sc?.ans || {home:"아파트·빌라", alone:"4~8시간", walk:"30분~1시간", exp:"없음", pets:"없음", kids:"없음", budget:"월 10~20만 원", allergy:"없음"};
+  return `<div class="panel" id="selfcheck"><h3>입양 전 자가 체크</h3>
+    <p class="muted small" style="margin:0">내 생활 조건을 이 공고와 비교해요. 입력한 내용은 이 기기에서만 쓰여요.</p>
+    <div class="grid2">
+      ${opts({key:"home",label:"주거 형태"}, ["원룸·오피스텔","아파트·빌라","마당 있는 집"], ans.home)}
+      ${opts({key:"alone",label:"하루 집을 비우는 시간"}, ["4시간 미만","4~8시간","8시간 이상"], ans.alone)}
+      ${a.species==="개" ? opts({key:"walk",label:"하루 산책 가능 시간"}, ["30분 미만","30분~1시간","1시간 이상"], ans.walk) : ""}
+      ${opts({key:"exp",label:"반려동물 경험"}, ["없음","같은 종 경험 있음","다른 종 경험 있음"], ans.exp)}
+      ${opts({key:"pets",label:"함께 사는 동물"}, ["없음","개","고양이","기타"], ans.pets)}
+      ${opts({key:"kids",label:"함께 사는 아이"}, ["없음","미취학 아동","초등학생 이상"], ans.kids)}
+      ${opts({key:"budget",label:"월 양육 예산"}, ["월 10만 원 미만","월 10~20만 원","월 20만 원 이상"], ans.budget)}
+      ${opts({key:"allergy",label:"가족 알레르기"}, ["없음","있음","모름"], ans.allergy)}
+    </div>
+    <button class="btn primary block" data-check>내 조건과 비교하기</button>
+    <div id="sc-result">${sc?.result ? checkResultHTML(sc.result, sc.ai) : ""}</div>
+  </div>`;
+}
+function checkResultHTML(r, isAI){
+  const v = VERDICT[r.verdict] || VERDICT.adjust;
+  const grp = (t, arr) => arr && arr.length ? `<div class="grp"><h3>${t}</h3><ul class="list">${arr.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+  return `<div class="panel soft res">
+    <div class="row" style="justify-content:space-between"><span class="verdict ${v[1]}">${v[0]}</span><span class="badge ${isAI?"b-fresh":"b-plain"}">${isAI?"AI 분석":"기본 규칙 분석"}</span></div>
+    ${grp("잘 맞는 점", r.good)}${grp("맞춰갈 점", r.adjust)}${grp("다시 생각해 볼 점", r.reconsider)}
+    ${r.questions?.length ? `<div class="grp"><h3>보호소에 물어볼 질문</h3><ol class="qlist">${r.questions.map(q => `<li>${esc(q)}</li>`).join("")}</ol></div>` : ""}
+    ${r.note ? `<p class="err" style="margin:0">${esc(r.note)}</p>` : ""}
+    <p class="muted small" style="margin:0">결과는 참고용이에요. 최종 판단은 동물을 직접 만나 보고 보호소와 상의해서 내려 주세요.</p>
+  </div>`;
+}
+
+/* registrant */
+function regHTML(){
+  return `<div class="stack">
+    <div class="tabs" role="group" aria-label="등록자 메뉴">
+      <button class="chip" data-regtab="manage" aria-pressed="${state.regTab==="manage"}">내 공고 관리</button>
+      <button class="chip" data-regtab="new" aria-pressed="${state.regTab==="new"}">새 공고 작성</button>
+      <button class="chip" data-regtab="improve" aria-pressed="${state.regTab==="improve"}">기존 공고 개선</button>
+    </div>
+    ${state.regTab === "manage" ? manageHTML() : state.regTab === "improve" ? improveHTML() : newHTML()}
+  </div>`;
+}
+function manageHTML(){
+  const list = allAnimals().filter(a => (a.demo && a.shelter === "예시 보호센터 A") || (!a.demo && !a.real));
+  const stale = list.filter(a => freshness(a).cls === "b-stale").length;
+  return `<p class="note">예시 보호센터 A로 로그인한 상태를 가정한 화면이에요.</p>
+    ${stale ? `<div class="panel" style="border-color:var(--red)"><b>상태 확인이 필요한 공고 ${stale}건</b><span class="small muted">7일 넘게 확인하지 않은 공고예요. 아직 보호 중인지 확인해 주세요. 입양자가 헛걸음하지 않도록 도와줘요.</span></div>` : ""}
+    <div class="mgmt">${list.map(a => {
+      const fr = freshness(a);
+      return `<div class="mrow"><div class="row"><b>${esc(a.breed)} <span class="muted small">${esc(a.sex)} · ${esc(a.age)}</span></b><span class="badge ${fr.cls}">${esc(fr.label)}</span></div>
+        <div class="small muted">${esc(a.ai?.headline || "")}</div>
+        <div class="row">
+          <button class="btn" data-confirm="${a.id}">아직 보호 중이에요</button>
+          <label class="f" style="flex:1;min-width:150px"><span class="sr-only" style="position:absolute;left:-9999px">상태</span>
+            <select data-status="${a.id}">${["보호 중","입양 완료","다른 보호소로 이동"].map(s => `<option${s===a.status?" selected":""}>${s}</option>`).join("")}</select></label>
+        </div></div>`;
+    }).join("")}</div>`;
+}
+function behRow([k, l], sp){
+  if (k === "walk" && sp !== "개") return "";
+  const name = `beh-${k}`;
+  return `<div class="lab">${l}</div><div class="opt" role="radiogroup" aria-label="${l}">${Object.entries(BEH_VAL).map(([v, t]) => `<label><input type="radio" name="${name}" value="${v}"${v==="unknown"?" checked":""}><span>${t}</span></label>`).join("")}</div>`;
+}
+function newHTML(){
+  const d = state.draft;
+  if (d && d.preview) return previewHTML(d);
+  const sp = d?.form?.species || "개";
+  return `<form id="newform" novalidate>
+    <p class="note">짧게 체크만 해도 AI가 자세한 공고로 정리해요. 모르는 항목은 '모름'으로 두세요. AI는 모르는 내용을 지어내지 않고 '확인 필요'로 표시해요.</p>
+    <fieldset><legend>기본 정보</legend>
+      <div class="grid2">
+        <label class="f">종 <span class="req">*</span><select id="f-species">${["개","고양이","토끼","기타"].map(s => `<option${s===sp?" selected":""}>${s}</option>`).join("")}</select></label>
+        <label class="f">품종 <span class="req">*</span><input id="f-breed" placeholder="예: 믹스견, 코리안숏헤어" required></label>
+        <label class="f">성별<select id="f-sex"><option>수컷</option><option>암컷</option><option>모름</option></select></label>
+        <label class="f">중성화<select id="f-neutered"><option>예</option><option>아니오</option><option selected>모름</option></select></label>
+        <label class="f">나이 <span class="req">*</span><input id="f-age" placeholder="예: 2살 (추정)" required></label>
+        <label class="f">체중(kg) <span class="req">*</span><input id="f-weight" type="number" step="0.1" min="0.1" inputmode="decimal" placeholder="예: 8.5" required></label>
+        <label class="f">털 색<input id="f-color" placeholder="예: 흰색"></label>
+        <label class="f">접종<select id="f-vacc"><option>완료</option><option>접종 중</option><option>미접종</option><option selected>모름</option></select></label>
+        <label class="f">발견 장소<input id="f-place" placeholder="예: OO동 공원"></label>
+        <label class="f">발견일<input id="f-date" type="date" value="${todayISO()}"></label>
+      </div>
+      <div id="vacc-fields" class="stack" hidden>
+        <div class="small muted" style="font-weight:600">접종 내역</div>
+        ${(VACCINES[sp]||[]).length ? `<div class="beh">${VACCINES[sp].map((n, i) => `<div class="lab">${n}</div><div class="opt" role="radiogroup" aria-label="${n}">${Object.entries(VAC_VAL).map(([v, t]) => `<label><input type="radio" name="vac-${i}" value="${v}"${v==="none"?" checked":""}><span>${t}</span></label>`).join("")}</div>`).join("")}</div>` : ""}
+        <label class="f">접종 메모<input id="f-vaccmemo" placeholder="예: 종합백신 3차까지 완료, 11월 중순 4차 예정"></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>성격 키워드</legend>
+      <div class="chips traits">${TRAITS.map(t => `<label class="chip"><input type="checkbox" value="${t}" style="margin-right:4px">${t}</label>`).join("")}</div>
+    </fieldset>
+    <fieldset><legend>행동 관찰</legend>
+      <div class="beh">${BEH.map(x => behRow(x, sp)).join("")}</div>
+      <label class="f">관찰 메모<textarea id="f-memo" placeholder="예: 산책을 좋아하고 줄 당김이 거의 없음. 혼자 두면 30분쯤 짖음."></textarea></label>
+    </fieldset>
+    <fieldset><legend>건강</legend>
+      <label class="f">현재 질병이 있나요?<select id="f-hasdis"><option value="no">없음</option><option value="yes">있음</option></select></label>
+      <div id="dis-fields" hidden class="stack">
+        <label class="f">질병명 <span class="req">*</span><select id="f-disname"><option value="">선택하세요</option>${Object.keys(DISEASES).map(n => `<option>${n}</option>`).join("")}<option value="__other">기타 (직접 입력)</option></select></label>
+        <label class="f" id="dis-other-wrap" hidden>질병명 직접 입력 <span class="req">*</span><input id="f-disother" placeholder="정확한 진단명을 입력하세요"></label>
+        <label class="f">치료 상태 <span class="req">*</span><select id="f-disstatus"><option>치료 중</option><option>지속 관리</option><option>완치</option></select></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>보호소</legend>
+      <div class="grid2">
+        <label class="f">지역<select id="f-region"><option>예시 지역</option>${REGIONS.map(r => `<option>${r}</option>`).join("")}</select></label>
+        <label class="f">보호소 이름<input id="f-shelter" value="예시 보호센터 A"></label>
+        <label class="f">연락처<input id="f-tel" value="000-0000-0001"></label>
+      </div>
+    </fieldset>
+    <p class="err" id="f-err" hidden></p>
+    <button class="btn primary block" type="submit">${state.sample ? "AI로 공고 작성하기" : "공고 초안 만들기"}</button>
+    ${state.sampleReady && !state.sample ? `<p class="muted small" style="margin:0">지금은 AI를 쓸 수 없어 기본 초안으로 만들어요.</p>` : ""}
+  </form>`;
+}
+function previewHTML(d){
+  const a = d.animal;
+  return `<div class="stack">
+    <button class="back" data-redo>← 입력으로 돌아가기</button>
+    <div class="row" style="justify-content:space-between"><h2>공고 미리보기</h2><span class="badge ${d.byAI?"b-fresh":"b-plain"}">${d.byAI?"AI 작성":"기본 초안"}</span></div>
+    ${d.loading ? `<div class="panel"><div class="thinking"><span class="dot"></span>AI가 공고를 쓰고 있어요. 보통 10~40초 걸려요.</div><button class="btn" data-stop>멈추기</button></div>` : ""}
+    ${d.error ? `<p class="err">${esc(d.error)}</p>` : ""}
+    ${!d.loading ? `<div class="panel"><h3>${esc(a.ai?.headline || a.breed)}</h3>${vaccSummary(a) ? `<div class="small"><span class="muted">접종 내역</span> ${esc(vaccSummary(a))}</div>` : `<div class="small"><span class="muted">접종</span> ${esc(a.vacc)}</div>`}<div class="size-sense"><span aria-hidden="true">⚖</span><span><b>크기 감각</b> ${esc(sizeSense(a))}</span></div></div>
+      ${aiBlocks(a, a.ai)}${diseaseHTML(a)}
+      <div class="row"><button class="btn primary" data-publish style="flex:1">공고 등록하기</button>${state.sample ? `<button class="btn" data-regen>다시 쓰기</button>` : ""}</div>` : ""}
+  </div>`;
+}
+
+/* improve existing notice */
+const SAMPLE_RAW = [
+  {label:"예민한 강아지", species:"개", breed:"믹스견", age:"2025년생", weight:10, raw:"목줄이 파고들어 치료중인 강아지/ 아파서인지 예민하고 경계심 있음/ 적응중"},
+  {label:"다친 고양이", species:"고양이", breed:"한국 고양이", age:"2025년생", weight:3, raw:"하악질. 약한 입질. 눈곱. 양 후지 대퇴 골절. 꼬리 끝 신경 살아있음. 털 상태 양호."},
+  {label:"한 단어 공고", species:"개", breed:"믹스견", age:"2023년생", weight:6, raw:"온순함"}
+];
+function improveHTML(){
+  const s = state.idraft || {};
+  if (s.animal) {
+    const a = s.animal;
+    return `<div class="stack">
+      <button class="back" data-iredo>← 문구 다시 입력하기</button>
+      <div class="row" style="justify-content:space-between"><h2>정리 결과</h2><span class="badge ${s.byAI?"b-fresh":"b-plain"}">${s.byAI?"AI 정리":"기본 정리"}</span></div>
+      <div class="panel soft"><h3>원래 공고 문구</h3><div class="raw" style="background:var(--surface)">${esc(a.raw)}</div></div>
+      ${s.loading ? `<div class="panel"><div class="thinking"><span class="dot"></span>AI가 공고를 정리하고 있어요. 보통 10~40초 걸려요.</div><button class="btn" data-istop>멈추기</button></div>` : ""}
+      ${s.error ? `<p class="err">${esc(s.error)}</p>` : ""}
+      ${!s.loading ? `<div class="panel"><h3>${esc(a.ai?.headline || a.breed)}</h3>${sizeSense(a) ? `<div class="size-sense"><span aria-hidden="true">⚖</span><span><b>크기 감각</b> ${esc(sizeSense(a))}</span></div>` : ""}</div>
+        ${aiBlocks(a, a.ai)}
+        <div class="panel soft"><b>빠진 정보 중 아는 게 있나요?</b><span class="small muted">'빠진 정보 채우기'를 누르면 이 내용이 새 공고 작성 화면에 옮겨져요. 아는 항목만 체크하면 AI가 더 자세한 공고로 다시 써요.</span></div>
+        <div class="row"><button class="btn primary" data-ipublish style="flex:1">이대로 등록하기</button><button class="btn" data-ifill style="flex:1">빠진 정보 채우기</button></div>
+        ${state.sample ? `<button class="btn ghost" data-iregen>다시 정리하기</button>` : ""}` : ""}
+    </div>`;
+  }
+  const v = s.input || {species:"개", breed:"", age:"", weight:"", raw:""};
+  return `<form id="iform" novalidate>
+    <p class="note">이미 국가동물보호정보시스템 등에 올린 공고 문구를 붙여넣기만 하면 돼요. 새로 입력할 필요 없이 AI가 정리하고, 빠진 정보를 짚어 줘요.</p>
+    <fieldset><legend>원래 공고 문구 <span class="req">*</span></legend>
+      <label class="f"><span>특징 메모를 그대로 붙여넣으세요</span><textarea id="i-raw" placeholder="예: 온순함, 접종완료">${esc(v.raw)}</textarea></label>
+      <div class="small muted">실제 공고 문구로 해 보기</div>
+      <div class="chips">${SAMPLE_RAW.map((x, i) => `<button type="button" class="chip" data-sample="${i}">${x.label}</button>`).join("")}</div>
+    </fieldset>
+    <fieldset><legend>기본 정보 (공고에 있는 그대로)</legend>
+      <div class="grid2">
+        <label class="f">종<select id="i-species">${["개","고양이","토끼","기타"].map(x => `<option${x===v.species?" selected":""}>${x}</option>`).join("")}</select></label>
+        <label class="f">품종<input id="i-breed" value="${esc(v.breed)}" placeholder="예: 믹스견"></label>
+        <label class="f">나이<input id="i-age" value="${esc(v.age)}" placeholder="예: 2025년생"></label>
+        <label class="f">체중(kg)<input id="i-weight" type="number" step="0.1" min="0.1" inputmode="decimal" value="${esc(v.weight)}" placeholder="예: 6"></label>
+      </div>
+    </fieldset>
+    <p class="err" id="i-err" hidden></p>
+    <button class="btn primary block" type="submit">${state.sample ? "AI로 정리하기" : "기본 정리하기"}</button>
+  </form>`;
+}
+function improvePrompt(a){
+  return `너는 유기동물 보호소의 기존 입양 공고를 입양자가 이해하기 쉽게 정리한다. 근거는 아래 '원래 공고 문구'와 기본 정보뿐이다.
+
+규칙:
+1. 원래 문구에 없는 성격, 행동, 건강 사실을 절대 만들지 않는다. personality의 evidence에는 원래 문구의 표현을 따옴표로 인용한다.
+2. 입양 판단에 필요한데 문구에 없는 정보(다른 동물·아이와의 관계, 혼자 있을 때 반응, 배변, 산책 습관, 접종·중성화, 건강 상태 등)는 missing에 넣는다.
+3. care는 "주거 환경", "산책·활동"(고양이·토끼는 "놀이·활동"), "다른 동물·아이", "추천 보호자 경험" 중에서 쓴다. 문구가 근거면 basis를 "보호자 관찰", 종·크기 일반론이면 "일반 권고".
+4. 문구에 질병이나 부상이 있으면 health_note에 쉬운 말로 1~2문장 쓰고 치료 상태 확인을 권한다. 치사율·예후를 숫자로 쓰지 않는다. 없으면 빈 문자열.
+5. questions는 입양 희망자가 보호소에 물어볼 질문 3~5개, 첫 질문은 "지금도 보호소에서 보호 중인가요?"
+6. 해요체, 과장 없이. headline은 30자 이내.
+
+기본 정보: ${JSON.stringify({종:a.species, 품종:a.breed, 나이:a.age, 체중kg:a.weight||"미상", 크기분류:sizeClass(a)||"해당 없음"})}
+원래 공고 문구: """${a.raw}"""
+
+JSON만 답한다. 형식:
+{"headline":"","summary":"2~3문장","personality":[{"trait":"","evidence":"보호자 관찰: '...'"}],"care":[{"topic":"","text":"","basis":"일반 권고"}],"health_note":"","missing":[""],"questions":[""]}`;
+}
+const PERS_RE = /(순함|순해요|순하|온순|얌전|착함|순둥|겁|소심|경계|예민|공격|입질|하악|활발|명랑|애교|사람[^,./]{0,6}(좋아|따름|따라)|손길|손 잘 탐|사람손|낯가|짖|조용|차분|호기심)/;
+function fallbackImprove(a){
+  const parts = a.raw.split(/[,./\n]+/).map(s => s.trim()).filter(Boolean);
+  const pers = parts.filter(p => PERS_RE.test(p)).map(p => ({trait:p, evidence:`보호자 관찰: '${p}'`}));
+  const missing = ["다른 개·고양이와의 관계","아이와의 관계","혼자 있을 때 반응", ...(a.species === "개" ? ["배변 가리기","산책 습관"] : ["화장실 사용"]),"접종·건강 상태"];
+  return {headline:`${a.age} ${a.breed}`.trim(), summary:`원래 공고 문구: ${a.raw}`, personality:pers, care:baseCare(a), health_note:"", missing, questions:["지금도 보호소에서 보호 중인가요?","혼자 있을 때 반응은 어떤가요?","다른 동물과 지내 본 적이 있나요?","접종이나 건강검진 기록이 있나요?"]};
+}
+async function runImprove(a, regen){
+  if (!state.sample){ a.ai = fallbackImprove(a); state.idraft = {...state.idraft, animal:a, byAI:false, loading:false}; render(); return; }
+  ctl?.abort(); ctl = new AbortController();
+  state.idraft = {...state.idraft, animal:a, loading:true, error:null}; render();
+  try {
+    const ai = await state.sample.json(improvePrompt(a), {signal: ctl.signal, cache: regen ? false : true});
+    if (!ai || !ai.headline) throw {code:"invalid_json"};
+    ai.care = Array.isArray(ai.care) ? ai.care : baseCare(a);
+    a.ai = ai; state.idraft = {...state.idraft, animal:a, byAI:true, loading:false};
+  } catch(e){
+    a.ai = a.ai || fallbackImprove(a);
+    state.idraft = {...state.idraft, animal:a, byAI:false, loading:false, error: e?.code === "cancelled" ? "멈췄어요. 기본 정리 결과를 보여드려요." : aiErrorText(e)};
+  }
+  render();
+}
+function bindImprove(){
+  const f = $("#iform");
+  if (f){
+    document.querySelectorAll("[data-sample]").forEach(b => b.onclick = () => {
+      const x = SAMPLE_RAW[+b.dataset.sample];
+      state.idraft = {input:{species:x.species, breed:x.breed, age:x.age, weight:x.weight, raw:x.raw}}; render();
+    });
+    f.onsubmit = e => {
+      e.preventDefault();
+      const g = id => ($("#"+id)?.value ?? "").trim();
+      const input = {species:g("i-species"), breed:g("i-breed"), age:g("i-age"), weight:g("i-weight"), raw:g("i-raw")};
+      if (!input.raw){ const er = $("#i-err"); er.textContent = "원래 공고 문구를 붙여넣어 주세요."; er.hidden = false; return; }
+      const a = {id:"n"+Date.now().toString(36), species:input.species, breed:input.breed||"품종 미상", sex:"모름", neutered:"모름", age:input.age||"나이 미상", weight:parseFloat(input.weight)||0, color:"-",
+        foundPlace:"-", foundDate:todayISO(), shelter:"예시 보호센터 A", tel:"000-0000-0001", vacc:"모름", lastChecked:todayISO(), status:"보호 중",
+        raw:input.raw, traits:[], behavior:Object.fromEntries(BEH.map(([k]) => [k,"unknown"])), memo:input.raw, disease:null};
+      state.idraft = {input, animal:a};
+      window.scrollTo(0,0);
+      runImprove(a, false);
+    };
+  }
+  const redo = $("[data-iredo]"); if (redo) redo.onclick = () => { ctl?.abort(); state.idraft = {input: state.idraft.input}; render(); };
+  const st = $("[data-istop]"); if (st) st.onclick = () => ctl?.abort();
+  const rg = $("[data-iregen]"); if (rg) rg.onclick = () => runImprove(state.idraft.animal, true);
+  const pub = $("[data-ipublish]"); if (pub) pub.onclick = () => {
+    state.added.unshift({...state.idraft.animal}); saveAdded(); state.idraft = null; state.regTab = "manage"; render(); toast("정리한 공고를 등록했어요");
+  };
+  const fill = $("[data-ifill]"); if (fill) fill.onclick = () => {
+    const i = state.idraft.input;
+    state.draft = {form:{species:i.species, breed:i.breed, age:i.age, weight:parseFloat(i.weight), memo:i.raw, traits:[], behavior:{}, vacc:"모름", hasdis:"no"}};
+    state.regTab = "new"; render(); refill(); window.scrollTo(0,0); toast("원래 문구를 관찰 메모에 옮겼어요");
+  };
+}
+
+async function improveListing(id){
+  const a = byId(id); if (!a || !state.sample) return;
+  ctl?.abort(); ctl = new AbortController();
+  state.aiLoading = id; render();
+  try {
+    const ai = await state.sample.json(improvePrompt(a), {signal: ctl.signal});
+    if (!ai || !ai.headline) throw {code:"invalid_json"};
+    ai.care = Array.isArray(ai.care) ? ai.care : baseCare(a);
+    state.aiCache[id] = ai; store.set("aa_ai", state.aiCache); state.aiError = null;
+  } catch(e){
+    if (e?.code !== "cancelled") state.aiError = {id, msg: aiErrorText(e)};
+  }
+  state.aiLoading = null; render();
+}
+
+/* ---------- events ---------- */
+let ctl = null;
+function bind(){
+  document.querySelectorAll("[data-filter]").forEach(b => b.onclick = () => { state.filter = b.dataset.filter; render(); });
+  const sr = $("#sel-region"); if (sr) sr.onchange = () => { state.region = sr.value; state.shelterSel = "전체"; render(); };
+  const ss = $("#sel-shelter"); if (ss) ss.onchange = () => { state.shelterSel = ss.value; render(); };
+  const aib = $("[data-ai-improve]"); if (aib) aib.onclick = () => improveListing(aib.dataset.aiImprove);
+  document.querySelectorAll("[data-open]").forEach(b => b.onclick = () => { state.view = {name:"detail", id:b.dataset.open}; render(); window.scrollTo(0,0); });
+  const back = $("[data-back]"); if (back) back.onclick = () => { state.view = {name:"list"}; render(); };
+  const copy = $("[data-copy]"); if (copy) copy.onclick = async () => {
+    try { await navigator.clipboard.writeText(copy.dataset.copy); toast("번호를 복사했어요"); }
+    catch(e){ const r = document.createRange(); r.selectNodeContents($("#tel")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("번호를 선택했어요. 복사해 주세요"); }
+  };
+  const chk = $("[data-check]"); if (chk) chk.onclick = () => runCheck(!!state.sample);
+  document.querySelectorAll("[data-regtab]").forEach(b => b.onclick = () => { state.regTab = b.dataset.regtab; render(); });
+  document.querySelectorAll("[data-confirm]").forEach(b => b.onclick = () => {
+    const id = b.dataset.confirm; state.overrides[id] = {...(state.overrides[id]||{}), lastChecked: todayISO(), status:"보호 중"}; saveOverrides(); render(); toast("오늘 날짜로 확인했어요");
+  });
+  document.querySelectorAll("[data-status]").forEach(s => s.onchange = () => {
+    const id = s.dataset.status; state.overrides[id] = {...(state.overrides[id]||{}), status: s.value, lastChecked: todayISO()}; saveOverrides(); render(); toast(`'${s.value}'로 바꿨어요`);
+  });
+  const form = $("#newform"); if (form) bindForm(form);
+  if (state.role === "reg" && state.regTab === "improve") bindImprove();
+  const redo = $("[data-redo]"); if (redo) redo.onclick = () => { ctl?.abort(); state.draft = {form: state.draft.form}; render(); refill(); };
+  const stop = $("[data-stop]"); if (stop) stop.onclick = () => ctl?.abort();
+  const regen = $("[data-regen]"); if (regen) regen.onclick = () => writeNotice(state.draft.animal, true);
+  const pub = $("[data-publish]"); if (pub) pub.onclick = () => {
+    const a = {...state.draft.animal}; delete a.demo;
+    state.added.unshift(a); saveAdded(); state.draft = null; state.regTab = "manage"; render(); toast("공고를 등록했어요. 입양 희망자 화면에서 볼 수 있어요");
+  };
+}
+function bindForm(form){
+  const sp = $("#f-species"), has = $("#f-hasdis"), dn = $("#f-disname");
+  sp.onchange = () => { const v = collect(); state.draft = {form: v}; render(); refill(); };
+  has.onchange = () => { $("#dis-fields").hidden = has.value !== "yes"; };
+  $("#f-vacc").onchange = e => { $("#vacc-fields").hidden = !vaccHasDetail(e.target.value); };
+  dn.onchange = () => { $("#dis-other-wrap").hidden = dn.value !== "__other"; };
+  form.onsubmit = e => {
+    e.preventDefault();
+    const v = collect(), err = $("#f-err");
+    const miss = [];
+    if (!v.breed) miss.push("품종"); if (!v.age) miss.push("나이"); if (!(v.weight > 0)) miss.push("체중");
+    if (v.hasdis === "yes" && !(v.disname === "__other" ? v.disother : v.disname)) miss.push("질병명");
+    if (miss.length){ err.textContent = `${miss.join(", ")}을(를) 입력해 주세요.`; err.hidden = false; return; }
+    const animal = {
+      id: "n" + Date.now().toString(36), species:v.species, breed:v.breed, sex:v.sex, neutered:v.neutered, age:v.age, weight:v.weight, color:v.color||"-",
+      foundPlace:v.place||"-", foundDate:v.date||todayISO(), shelter:v.shelter||"-", tel:v.tel||"-", region:v.region||"예시 지역", vacc:v.vacc, lastChecked:todayISO(), status:"보호 중",
+      raw: [v.traits.join(", "), v.memo].filter(Boolean).join(" / ") || "(입력 없음)", traits:v.traits, behavior:v.behavior, memo:v.memo,
+      disease: v.hasdis === "yes" ? {name: v.disname === "__other" ? v.disother : v.disname, status: v.disstatus} : null,
+      vaccDetail: vaccHasDetail(v.vacc) ? {list: v.vaccList.filter(x => x.status !== "none"), memo: v.vaccmemo} : null
+    };
+    state.draft = {form: v, animal, preview:true};
+    window.scrollTo(0,0);
+    writeNotice(animal, false);
+  };
+}
+function collect(){
+  const g = id => ($("#"+id)?.value ?? "").trim();
+  const behavior = {};
+  BEH.forEach(([k]) => { const r = document.querySelector(`input[name="beh-${k}"]:checked`); behavior[k] = r ? r.value : "unknown"; });
+  return {species:g("f-species"), breed:g("f-breed"), sex:g("f-sex"), neutered:g("f-neutered"), age:g("f-age"), weight:parseFloat(g("f-weight")), color:g("f-color"), vacc:g("f-vacc"), place:g("f-place"), date:g("f-date"),
+    traits:[...document.querySelectorAll(".traits input:checked")].map(i => i.value), behavior, memo:g("f-memo"),
+    hasdis:g("f-hasdis"), disname:g("f-disname"), disother:g("f-disother"), disstatus:g("f-disstatus"), shelter:g("f-shelter"), tel:g("f-tel"), region:g("f-region"),
+    vaccList:(VACCINES[g("f-species")]||[]).map((n, i) => ({name:n, status: document.querySelector(`input[name="vac-${i}"]:checked`)?.value || "none"})), vaccmemo:g("f-vaccmemo")};
+}
+function refill(){
+  const v = state.draft?.form; if (!v) return;
+  const set = (id, val) => { const el = $("#"+id); if (el && val !== undefined && val !== null && !Number.isNaN(val)) el.value = val; };
+  ["breed","sex","neutered","age","color","vacc","place","date","memo","shelter","tel","disstatus","disother","vaccmemo","region"].forEach(k => set("f-"+k, v[k]));
+  (v.vaccList||[]).forEach((x, i) => { const r = document.querySelector(`input[name="vac-${i}"][value="${x.status}"]`); if (r) r.checked = true; });
+  if ($("#vacc-fields")) $("#vacc-fields").hidden = !vaccHasDetail(v.vacc);
+  set("f-weight", v.weight); set("f-hasdis", v.hasdis); set("f-disname", v.disname);
+  document.querySelectorAll(".traits input").forEach(i => i.checked = (v.traits||[]).includes(i.value));
+  Object.entries(v.behavior||{}).forEach(([k, val]) => { const r = document.querySelector(`input[name="beh-${k}"][value="${val}"]`); if (r) r.checked = true; });
+  if ($("#dis-fields")) $("#dis-fields").hidden = v.hasdis !== "yes";
+  if ($("#dis-other-wrap")) $("#dis-other-wrap").hidden = v.disname !== "__other";
+}
+function fallbackNotice(a){
+  const obs = Object.entries(a.behavior).filter(([k,v]) => v !== "unknown" && (a.species==="개"||k!=="walk"));
+  const missing = BEH.filter(([k]) => (a.species==="개"||k!=="walk") && a.behavior[k] === "unknown").map(([,l]) => l);
+  return {headline:`${a.age} ${a.breed}`, summary: a.memo || "관찰 메모가 없어요.",
+    personality: [...a.traits.map(t => ({trait:t, evidence:"보호자 관찰: 성격 키워드"})), ...obs.map(([k,v]) => ({trait:`${BEH.find(x=>x[0]===k)[1]}: ${BEH_VAL[v]}`, evidence:"보호자 관찰: 행동 체크"}))],
+    care: baseCare(a), health_note: a.disease ? `${a.disease.name} (${a.disease.status})` : "", missing,
+    questions:["지금도 보호소에서 보호 중인가요?", ...missing.slice(0,3).map(m => `${m}은(는) 어떤가요?`)]};
+}
+async function writeNotice(a, regen){
+  if (!state.sample){ a.ai = fallbackNotice(a); state.draft = {...state.draft, animal:a, byAI:false, loading:false}; render(); return; }
+  ctl?.abort(); ctl = new AbortController();
+  state.draft = {...state.draft, animal:a, loading:true, error:null}; render();
+  try {
+    const ai = await state.sample.json(noticePrompt(a), {signal: ctl.signal, cache: regen ? false : true});
+    if (!ai || !ai.headline) throw {code:"invalid_json"};
+    ai.care = Array.isArray(ai.care) ? ai.care : baseCare(a);
+    a.ai = ai; state.draft = {...state.draft, animal:a, byAI:true, loading:false};
+  } catch(e){
+    if (e && e.code === "cancelled"){ state.draft = {...state.draft, loading:false, error:"멈췄어요. 다시 쓰거나 기본 초안을 쓸 수 있어요."}; a.ai = a.ai || fallbackNotice(a); }
+    else { a.ai = a.ai || fallbackNotice(a); state.draft = {...state.draft, animal:a, byAI:false, loading:false, error: aiErrorText(e)}; }
+  }
+  render();
+}
+async function runCheck(useAI){
+  const a = byId(state.view.id); if (!a) return;
+  const g = k => $("#sc-"+k)?.value;
+  const ans = {home:g("home"), alone:g("alone"), walk:g("walk")||"해당 없음", exp:g("exp"), pets:g("pets"), kids:g("kids"), budget:g("budget"), allergy:g("allergy")};
+  if (!useAI){ state.view.check = {ans, result: ruleCheck(a, ans), ai:false}; render(); $("#selfcheck")?.scrollIntoView({block:"start"}); return; }
+  const box = $("#sc-result");
+  box.innerHTML = `<div class="panel soft"><div class="thinking"><span class="dot"></span>AI가 비교하고 있어요. 보통 10~40초 걸려요.</div></div>`;
+  const btn = $("[data-check]"); if (btn) btn.disabled = true;
+  ctl?.abort(); ctl = new AbortController();
+  try {
+    const r = await state.sample.json(checkPrompt(a, ans), {signal: ctl.signal});
+    if (!r || !r.verdict) throw {code:"invalid_json"};
+    state.view.check = {ans, result:r, ai:true};
+    render(); $("#selfcheck")?.scrollIntoView({block:"start"});
+  } catch(e){
+    const rr = ruleCheck(a, ans);
+    if (e?.code !== "cancelled") rr.note = aiErrorText(e).replace("AI 없이 만든 기본 결과", "기본 규칙으로 비교한 결과");
+    state.view.check = {ans, result: rr, ai:false}; render();
+  }
+}
+$("#go-home").onclick = () => { ctl?.abort(); setRole("home"); };
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "ipyanghagae",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "입양하개 - 유기동물 입양공고 AI 서비스",
+  "scripts": {
+    "dev": "node --env-file=.env dev-server.mjs"
+  },
+  "engines": { "node": ">=20.6" }
+}
