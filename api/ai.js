@@ -2,7 +2,7 @@
 // 브라우저는 이 함수에 프롬프트만 보내고, API 키는 Vercel 환경변수(ANTHROPIC_API_KEY)에만 있다.
 
 const MODEL = process.env.AI_MODEL || "claude-haiku-5-5"; // 빠르고 저렴한 Haiku 모델 (Vercel 환경변수 AI_MODEL로 바꿀 수 있음)
-const MAX_TOKENS = 1500;          // 한 번 답변 길이 상한
+const MAX_TOKENS = 4000;          // 한 번 답변 길이 상한 (한글 공고 정리가 잘리지 않을 만큼)
 const MAX_PROMPT_CHARS = 8000;    // 너무 긴 요청 차단
 const PER_MINUTE = 6;             // 한 사람(IP)이 1분에 보낼 수 있는 요청 수
 const PER_DAY_TOTAL = Number(process.env.DAILY_LIMIT || 300); // 서버 인스턴스당 하루 총 요청 상한
@@ -44,33 +44,47 @@ export default async function handler(req, res) {
   const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "?").split(",")[0].trim();
   if (limited(ip)) return res.status(429).json({ error: "rate_limited" });
 
-  try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system: "요청한 JSON 형식으로만 답한다. 설명이나 코드 블록 표시 없이 JSON 객체 하나만 출력한다.",
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    const data = await r.json();
-    if (!r.ok) {
-      const msg = JSON.stringify(data?.error || {});
-      console.error("Anthropic error", r.status, msg);
-      if (r.status === 429) return res.status(429).json({ error: "rate_limited" });
-      if (/credit|limit|billing/i.test(msg)) return res.status(402).json({ error: "budget" });
+  // 형식이 어긋나거나 답변이 잘리면 한 번 더 요청한다.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": key.trim(),
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          system: "요청한 JSON 형식으로만 답한다. 설명이나 코드 블록 표시 없이 JSON 객체 하나만 출력한다. 각 문장은 간결하게 쓴다.",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        const msg = JSON.stringify(data?.error || {});
+        console.error("Anthropic error", r.status, msg);
+        if (r.status === 429) return res.status(429).json({ error: "rate_limited" });
+        if (/credit|limit|billing/i.test(msg)) return res.status(402).json({ error: "budget" });
+        return res.status(502).json({ error: "upstream" });
+      }
+      const text = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("");
+      const json = extractJSON(text);
+      if (json) return res.status(200).json({ text: JSON.stringify(json) });
+      console.error("Invalid JSON from model", { attempt, stop_reason: data.stop_reason, length: text.length });
+    } catch (e) {
+      console.error(e);
       return res.status(502).json({ error: "upstream" });
     }
-    const text = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("");
-    return res.status(200).json({ text });
-  } catch (e) {
-    console.error(e);
-    return res.status(502).json({ error: "upstream" });
   }
+  return res.status(200).json({ text: "" }); // 화면에서 '형식이 맞지 않았어요'로 안내
+}
+
+// 답변에서 JSON 객체만 꺼낸다 (```json 표시나 앞뒤 설명이 붙어도 처리)
+function extractJSON(text) {
+  const t = String(text || "").replace(/```(?:json)?/gi, "");
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a < 0 || b <= a) return null;
+  try { return JSON.parse(t.slice(a, b + 1)); } catch { return null; }
 }
