@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="유기동물 입양공고를 AI가 자세하게 정리해 주는 서비스">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22 fill=%22%237A6A62%22/%3E%3Cpath fill=%22%23FBF8F1%22 d=%22M12.3 11.2c-3 0-6.3 4.4-6.3 7.1 0 1.9 1.5 2.7 3 2.7 1.3 0 2.2-.8 3.3-.8s2 .8 3.3.8c1.5 0 3-.8 3-2.7 0-2.7-3.3-7.1-6.3-7.1z%22/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='12 12 79 79'%3E%3Cline x1='64' y1='64' x2='84' y2='84' stroke='%233B302B' stroke-width='10' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='44' r='28' fill='%23FBF8F1' stroke='%237A6A62' stroke-width='7'/%3E%3Cg transform='translate(29 30) scale(1.25)' fill='%233B302B'%3E%3Cellipse cx='6' cy='9' rx='2.2' ry='2.8'/%3E%3Cellipse cx='10.2' cy='5.6' rx='2.2' ry='2.8'/%3E%3Cellipse cx='14.6' cy='5.6' rx='2.2' ry='2.8'/%3E%3Cellipse cx='18.6' cy='9.2' rx='2.2' ry='2.8'/%3E%3Cpath d='M12.3 11.2c-3 0-6.3 4.4-6.3 7.1 0 1.9 1.5 2.7 3 2.7 1.3 0 2.2-.8 3.3-.8s2 .8 3.3.8c1.5 0 3-.8 3-2.7 0-2.7-3.3-7.1-6.3-7.1z'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
@@ -40,10 +40,10 @@ header.top[hidden]{display:none}
 /* home */
 .home{min-height:100svh;display:flex;flex-direction:column;justify-content:center;gap:36px;padding-block:48px}
 .home .logo{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
-.home .mark{width:96px;height:96px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
-.home .mark svg{width:50px;height:50px}
+.home .mark{width:120px;height:120px}
+.home .mark svg{width:100%;height:100%;display:block}
 .home h1{font-family:var(--font-display);font-weight:400;font-size:42px;margin:0;letter-spacing:-.01em;line-height:1.1}
-.home .tag{margin:0;color:var(--muted);font-size:15px}
+.home .tag{margin:0;color:var(--muted);font-size:15px;word-break:keep-all;text-wrap:balance}
 .home .choices{display:flex;flex-direction:column;gap:12px}
 .choice{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;cursor:pointer;color:var(--ink);font:inherit;width:100%}
 .choice:hover{border-color:var(--accent)}
@@ -368,6 +368,7 @@ function walkMinutes(a){
   return m;
 }
 function speciesKey(s){ return s === "개" ? "dog" : s === "고양이" ? "cat" : s === "토끼" ? "rabbit" : "etc"; }
+const LOGO = '<svg viewBox="12 12 79 79" role="img" aria-label="입양하개 로고"><line x1="64" y1="64" x2="84" y2="84" stroke="#3B302B" stroke-width="10" stroke-linecap="round"/><circle cx="44" cy="44" r="28" fill="#FBF8F1" stroke="#7A6A62" stroke-width="7"/><g transform="translate(29 30) scale(1.25)" fill="#3B302B"><ellipse cx="6" cy="9" rx="2.2" ry="2.8"/><ellipse cx="10.2" cy="5.6" rx="2.2" ry="2.8"/><ellipse cx="14.6" cy="5.6" rx="2.2" ry="2.8"/><ellipse cx="18.6" cy="9.2" rx="2.2" ry="2.8"/><path d="M12.3 11.2c-3 0-6.3 4.4-6.3 7.1 0 1.9 1.5 2.7 3 2.7 1.3 0 2.2-.8 3.3-.8s2 .8 3.3.8c1.5 0 3-.8 3-2.7 0-2.7-3.3-7.1-6.3-7.1z"/></g></svg>';
 const PAW = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="6" cy="9" rx="2.2" ry="2.8"/><ellipse cx="10.2" cy="5.6" rx="2.2" ry="2.8"/><ellipse cx="14.6" cy="5.6" rx="2.2" ry="2.8"/><ellipse cx="18.6" cy="9.2" rx="2.2" ry="2.8"/><path d="M12.3 11.2c-3 0-6.3 4.4-6.3 7.1 0 1.9 1.5 2.7 3 2.7 1.3 0 2.2-.8 3.3-.8s2 .8 3.3.8c1.5 0 3-.8 3-2.7 0-2.7-3.3-7.1-6.3-7.1z"/></svg>';
 
 
@@ -546,7 +547,7 @@ JSON만 답한다. 형식: {"verdict":"adjust","good":[""],"adjust":[""],"recons
 function homeHTML(){
   const reg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>';
   return `<div class="home">
-    <div class="logo"><div class="mark">${PAW}</div><h1>입양하개</h1><p class="tag">내 반려동물을 만나러 가기 전에 자세한 공고로 미리 확인해요</p></div>
+    <div class="logo"><div class="mark">${LOGO}</div><h1>입양하개</h1><p class="tag">내 반려동물을 만나러 가기 전에 자세한 공고로 미리 확인해요</p></div>
     <div class="choices">
       <button class="choice" data-role="adopter"><div class="ic t-dog">${PAW}</div><div><b>입양 희망자</b><span class="d">공고 찾기 · AI 정리 · 자가 체크</span></div><span class="arr" aria-hidden="true">›</span></button>
       <button class="choice" data-role="reg"><div class="ic t-cat" style="color:var(--blue)">${reg}</div><div><b>공고 등록자</b><span class="d">AI 공고 작성 · 공고 관리</span></div><span class="arr" aria-hidden="true">›</span></button>
